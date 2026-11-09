@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 import { AIRCRAFT_KEY, DEFAULT_AIRCRAFT } from './aircraft';
 import {
   PROFILES_KEY, DEFAULT_LIMITS, clone, findVersion, migrateAircraft, newProfileId, normalise,
-  readProfiles, validateProfileDraft, type FieldErrors, type ProfileDraft, type ProfilesDoc, type SaveTarget,
+  readProfiles, validateProfileDraft, applyImport, type ImportChoices, type TransferProfile, type FieldErrors, type ProfileDraft, type ProfilesDoc, type SaveTarget,
 } from './operating-profiles';
 
 type KV = { getItem(key: string): Promise<string | null>; setItem(key: string, value: string): Promise<void> };
@@ -84,6 +84,14 @@ export function createProfileStore(storage: KV) {
     subscribe(f: () => void) { subscribers.add(f); return () => { subscribers.delete(f); }; },
     reload: () => { const run = chain.then(load); chain = run.catch(() => undefined); return run; },
     save,
+    /** All-or-nothing: any failure leaves saved profiles and selection untouched. */
+    importProfiles: (incoming: TransferProfile[], expectedRevision: number, choices: ImportChoices) => mutate(doc => {
+      if (doc.revision !== expectedRevision) return 'Saved profiles changed after this preview. Choose the file again to review the current differences.';
+      try {
+        const result = applyImport(doc, incoming, choices);
+        return typeof result === 'string' ? result : { doc: result.doc };
+      } catch (e) { return e instanceof Error ? e.message : 'The import could not be applied.'; }
+    }),
     select: (versionId: string | null) => mutate(doc => {
       if (versionId !== null && !findVersion(doc, versionId)) return 'That saved profile version no longer exists.';
       doc.activeVersionId = versionId;

@@ -218,3 +218,54 @@ test('document validation rejects future schemas, missing selection, duplicates 
   assert.throws(() => P.readProfiles(JSON.stringify({ ...valid, profiles: [...valid.profiles, ...valid.profiles] })));
   assert.throws(() => P.readProfiles(' '.repeat(2_000_001)));
 });
+
+test('export/import round trip preserves versions, excludes selection, and respects replace/activate choices', async () => {
+  const { s } = await setup();
+  const v2 = await add(s, { reoc: 'ReOC B', name: 'Site', label: '2', manual: 'Manual 4', effectiveNote: 'note', maxHeightM: '90.5' });
+  const text = P.exportProfiles(s.get().doc);
+  assert.equal(text.includes('activeVersionId'), false);
+  const incoming = P.parseTransfer(text);
+  const fresh = await setup();
+  const before = JSON.stringify(fresh.s.get().doc);
+  const plan = P.planImport(fresh.s.get().doc, incoming);
+  assert.ok(plan.some(p => p.isNew && p.name === 'Site'));
+  const res = await fresh.s.importProfiles(incoming, fresh.s.get().doc.revision, { replaceKeys: [], activateKey: null });
+  assert.equal(res.ok, true);
+  const d = fresh.s.get().doc;
+  assert.equal(d.activeVersionId, 'starter-version');
+  const site = d.profiles.find(p => p.name === 'Site');
+  assert.equal(site.versions[0].limits.maxHeightM, 90.5); assert.equal(site.versions[0].manual, 'Manual 4');
+  assert.notEqual(site.id, s.get().doc.profiles.find(p => p.name === 'Site').id);
+  // identical re-import adds nothing; conflict kept unless replaced
+  const again = P.planImport(d, incoming);
+  assert.ok(again.every(p => p.versions.every(v => v.status === 'same')));
+  const changed = P.parseTransfer(text.replace('90.5', '80'));
+  assert.equal(P.planImport(d, changed).flatMap(p => p.versions).find(v => v.status === 'conflict').label, '2');
+  await fresh.s.importProfiles(changed, d.revision, { replaceKeys: [], activateKey: null });
+  assert.equal(fresh.s.get().doc.profiles.find(p => p.name === 'Site').versions[0].limits.maxHeightM, 90.5);
+  const key = P.planImport(fresh.s.get().doc, changed).flatMap(p => p.versions).find(v => v.status === 'conflict').key;
+  await fresh.s.importProfiles(changed, fresh.s.get().doc.revision, { replaceKeys: [key], activateKey: key });
+  const m = match(fresh.s);
+  assert.equal(m.version.limits.maxHeightM, 80); assert.equal(m.profile.reoc, 'ReOC B');
+  assert.notEqual(before, JSON.stringify(fresh.s.get().doc));
+});
+test('invalid, unexpected, stale and failing imports leave saved data and selection unchanged', async () => {
+  const { kv, s } = await setup();
+  const good = P.exportProfiles(s.get().doc);
+  assert.throws(() => P.parseTransfer('nope'));
+  assert.throws(() => P.parseTransfer(JSON.stringify({ ...JSON.parse(good), password: 'x' })));
+  const withCred = JSON.parse(good); withCred.profiles[0].versions[0].credentials = 'x';
+  assert.throws(() => P.parseTransfer(JSON.stringify(withCred)));
+  const bad = JSON.parse(good); bad.profiles[0].versions[0].limits.peopleM = -1;
+  assert.throws(() => P.parseTransfer(JSON.stringify(bad)));
+  const dup = JSON.parse(good); dup.profiles.push(dup.profiles[0]);
+  assert.throws(() => P.parseTransfer(JSON.stringify(dup)));
+  const incoming = P.parseTransfer(good.replace('Starter reference', 'Other'));
+  const snapshot = JSON.stringify(s.get().doc);
+  assert.equal((await s.importProfiles(incoming, 999, { replaceKeys: [], activateKey: null })).ok, false);
+  assert.equal((await s.importProfiles(incoming, s.get().doc.revision, { replaceKeys: [], activateKey: '9:9' })).ok, false);
+  kv.failWrite = true;
+  assert.equal((await s.importProfiles(incoming, s.get().doc.revision, { replaceKeys: [], activateKey: '0:0' })).ok, false);
+  assert.equal(JSON.stringify(s.get().doc), snapshot);
+  assert.equal(JSON.parse(kv.data.get(P.PROFILES_KEY)).profiles.length, 1);
+});

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ActionButton, Badge, Callout, DISPLAY, Panel, SectionHeading } from '@/components/FieldKit';
 import { operationText } from '@/components/ActiveProfile';
+import { ProfileTransfer } from '@/components/ProfileTransfer';
 import { ProfileForm, type FormMode } from '@/components/ProfileForm';
 import { useColors } from '@/hooks/useColors';
 import { useUi } from '@/hooks/useUi';
@@ -184,6 +185,7 @@ export function ProfileManager() {
             <ActionButton icon="plus" label="New profile from starter" disabled={locked} testID="new-profile"
               onPress={() => startForm('new', { ...starterDraft(), reoc: '', name: '', label: '1' })} />
           )}
+          {!editing ? <ProfileTransfer doc={doc} disabled={locked} onDone={(m) => { setFailure(null); setNotice(m); }} /> : null}
           {editing ? <Text style={{ color: c.mutedForeground, fontSize: ui.fs(13), fontWeight: '700', marginBottom: 8 }}>Other profile actions are locked while this draft is open.</Text> : null}
           {hydrated && !readBlocked && profiles.length === 0 ? (
             <Panel><Text style={{ color: c.foreground, fontSize: ui.fs(16), fontWeight: '800' }}>No profiles saved. Aviate shows no limits until you create one and press Use version.</Text></Panel>

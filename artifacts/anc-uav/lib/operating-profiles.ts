@@ -13,15 +13,40 @@ const aircraftSchema = z.object({
 }).strict();
 const aircraftList = z.array(aircraftSchema).max(MAX_AIRCRAFT).refine(a => new Set(a.map(x => x.id)).size === a.length, 'Duplicate aircraft IDs.');
 const limitsSchema = z.object({ maxHeightM: number, peopleM: number, verticalFt: number, horizontalM: number }).strict();
-const versionSchema = z.object({
-  id, label: z.string().trim().min(1).max(40), operationType: z.enum(OPERATIONS),
+const versionShape = {
+  label: z.string().trim().min(1).max(40), operationType: z.enum(OPERATIONS),
   customOperation: z.string().trim().max(80), manual: z.string().trim().max(500),
   effectiveNote: z.string().trim().max(200), limits: limitsSchema, aircraft: aircraftList,
-}).strict().refine(v => v.operationType !== 'CUSTOM' || !!v.customOperation, 'Describe the custom operation.');
+};
+const customCheck = [(v: { operationType: string; customOperation: string }) => v.operationType !== 'CUSTOM' || !!v.customOperation, 'Describe the custom operation.'] as const;
+const versionSchema = z.object({ id, ...versionShape }).strict().refine(...customCheck);
+const importVersionSchema = z.object(versionShape).strict().refine(...customCheck);
 const profileSchema = z.object({
   id, reoc: z.string().trim().min(1).max(120), name: short,
   versions: z.array(versionSchema).min(1).max(50),
 }).strict();
+const importProfileSchema = z.object({
+  reoc: z.string().trim().min(1).max(120), name: short,
+  versions: z.array(importVersionSchema).min(1).max(50),
+}).strict();
+export const TRANSFER_FORMAT = 'anc-uav.reoc-profiles';
+export const TRANSFER_MAX_CHARS = 2_000_000;
+const transferSchema = z.object({
+  format: z.literal(TRANSFER_FORMAT), formatVersion: z.literal(1), exportedAt: z.string().max(40), notice: z.string().max(1000),
+  profiles: z.array(importProfileSchema).min(1).max(100),
+}).strict().superRefine((t, ctx) => {
+  const identities = new Set<string>();
+  for (const p of t.profiles) {
+    const identity = JSON.stringify([normalise(p.reoc), normalise(p.name)]);
+    if (identities.has(identity)) ctx.addIssue({ code: 'custom', message: 'The file lists the same profile twice.' });
+    identities.add(identity);
+    const labels = new Set(p.versions.map(v => normalise(v.label)));
+    if (labels.size !== p.versions.length) ctx.addIssue({ code: 'custom', message: 'The file repeats a version label within a profile.' });
+  }
+});
+export type TransferVersion = z.infer<typeof importVersionSchema>;
+export type TransferProfile = z.infer<typeof importProfileSchema>;
+
 const docSchema = z.object({
   version: z.literal(1), revision: z.number().int().nonnegative(),
   activeVersionId: id.nullable(), profiles: z.array(profileSchema).max(100),
@@ -120,4 +145,72 @@ export function validateProfileDraft(d: ProfileDraft):
   return { ok: true, value: { reoc, name, version: {
     label, operationType: d.operationType, customOperation, manual, effectiveNote, limits, aircraft: aircraft.data,
   } } };
+}
+
+/** Explicit backup file: profiles, versions, limits, aircraft and notes only. No selection, revision, preferences, credentials or incident data. */
+export function exportProfiles(doc: ProfilesDoc, now = new Date()): string {
+  return JSON.stringify({
+    format: TRANSFER_FORMAT, formatVersion: 1, exportedAt: now.toISOString(),
+    notice: 'Operator-entered reference figures exported from ANC UAV. ReOC names, manual notes and version labels are unverified declarations and are not approval or authorisation. Importing this file does not select a version.',
+    profiles: doc.profiles.map(p => ({
+      reoc: p.reoc, name: p.name,
+      versions: p.versions.map(({ id: _id, ...v }) => v),
+    })),
+  }, null, 2);
+}
+export function parseTransfer(raw: string): TransferProfile[] {
+  if (raw.length > TRANSFER_MAX_CHARS) throw new Error('This file is larger than the supported profile size.');
+  let json: unknown;
+  try { json = JSON.parse(raw.replace(/^\uFEFF/, '')); } catch { throw new Error('This file is not valid JSON.'); }
+  const parsed = transferSchema.safeParse(json);
+  if (!parsed.success) throw new Error('This is not a valid ANC UAV ReOC profile backup, or it contains unsupported or unexpected fields. Nothing was imported.');
+  return parsed.data.profiles;
+}
+export type VersionPlan = { key: string; label: string; status: 'add' | 'same' | 'conflict'; incoming: TransferVersion };
+export type ProfilePlan = { index: number; reoc: string; name: string; isNew: boolean; versions: VersionPlan[] };
+const sameContent = (a: TransferVersion, b: TransferVersion) => JSON.stringify(a) === JSON.stringify(b);
+const stripId = ({ id: _id, ...rest }: ProfileVersion): TransferVersion => rest;
+/** Compare incoming with saved data by ReOC + profile name, then version label. Pure; nothing is changed. */
+export function planImport(doc: ProfilesDoc, incoming: TransferProfile[]): ProfilePlan[] {
+  return incoming.map((p, index) => {
+    const existing = doc.profiles.find(e => normalise(e.reoc) === normalise(p.reoc) && normalise(e.name) === normalise(p.name));
+    return { index, reoc: p.reoc, name: p.name, isNew: !existing, versions: p.versions.map((v, vi) => {
+      const match = existing?.versions.find(e => normalise(e.label) === normalise(v.label));
+      return { key: `${index}:${vi}`, label: v.label, incoming: v,
+        status: !match ? 'add' as const : sameContent(stripId(match), v) ? 'same' as const : 'conflict' as const };
+    }) };
+  });
+}
+export type ImportChoices = { replaceKeys: string[]; activateKey: string | null };
+/** Applies a plan to a document copy. Existing versions are replaced only for keys in replaceKeys; selection changes only for activateKey. */
+export function applyImport(doc: ProfilesDoc, incoming: TransferProfile[], choices: ImportChoices): { doc: ProfilesDoc; activeId: string | null } | string {
+  const replace = new Set(choices.replaceKeys);
+  const ids = new Map<string, string>();
+  incoming.forEach((p, index) => {
+    let target = doc.profiles.find(e => normalise(e.reoc) === normalise(p.reoc) && normalise(e.name) === normalise(p.name));
+    const fresh = !target;
+    if (!target) {
+      if (doc.profiles.length >= 100) throw new Error('The limit of 100 profiles would be exceeded.');
+      target = { id: newProfileId(), reoc: doc.profiles.find(e => normalise(e.reoc) === normalise(p.reoc))?.reoc ?? p.reoc, name: p.name, versions: [] };
+      doc.profiles.push(target);
+    }
+    p.versions.forEach((v, vi) => {
+      const key = `${index}:${vi}`;
+      const match = target!.versions.find(e => normalise(e.label) === normalise(v.label));
+      if (match) {
+        if (replace.has(key) && !sameContent(stripId(match), v)) Object.assign(match, clone(v));
+        ids.set(key, match.id);
+      } else {
+        if (target!.versions.length >= 50) throw new Error('A profile would exceed the limit of 50 versions.');
+        const added = { ...clone(v), id: newProfileId() };
+        target!.versions.push(added);
+        ids.set(key, added.id);
+      }
+    });
+    void fresh;
+  });
+  const activeId = choices.activateKey ? ids.get(choices.activateKey) ?? null : null;
+  if (choices.activateKey && !activeId) return 'The version chosen for use is not in this file.';
+  if (activeId) doc.activeVersionId = activeId;
+  return { doc, activeId };
 }
