@@ -3,10 +3,10 @@ import { File } from 'expo-file-system';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
-import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading } from '../../components/FieldKit';
-import { useColors } from '../../hooks/useColors';
-import { useAppData } from '../../context/AppDataContext';
-import { deleteImportedFile, pickAndImportContent } from '../../lib/imports';
+import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading } from '@/components/FieldKit';
+import { useColors } from '@/hooks/useColors';
+import { useAppData } from '@/context/AppDataContext';
+import { deleteImportedFile, pickAndImportContent } from '@/lib/imports';
 
 export default function LibraryScreen() {
   const colors = useColors();
@@ -71,6 +71,7 @@ export default function LibraryScreen() {
     <Screen
       eyebrow="Local library"
       title="Content & Sources"
+      back
       subtitle="Files and packs stay on this device."
     >
       <Callout title="Imported content is never trusted automatically">
@@ -114,7 +115,7 @@ export default function LibraryScreen() {
             RPAS Operator Quick Reference
           </Text>
           <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-            The supplied two-sided A5 mockup is transcribed in the Quick Reference tab. Personal contacts were omitted.
+            The supplied two-sided A5 mockup is kept as full reference content in Quick Reference. Personal contacts were omitted.
           </Text>
           <ActionButton label="Open Quick Reference" icon="book-open" secondary onPress={() => router.push('/quick-reference')} />
         </View>

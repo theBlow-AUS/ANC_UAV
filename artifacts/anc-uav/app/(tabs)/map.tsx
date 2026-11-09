@@ -1,16 +1,16 @@
 import * as Location from 'expo-location';
 import { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Text, View } from 'react-native';
-import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading, TextField } from '../../components/FieldKit';
-import { useColors } from '../../hooks/useColors';
-import { distanceKm, formatCoordinate, initialBearingDegrees, kmToNm, nmToKm, parseCoordinate } from '../../lib/geo';
-import { useNavigation } from '../../context/NavigationContext';
-import { OfflineMap } from '../../components/OfflineMap';
-import { NavigationPacks } from '../../components/NavigationPacks';
-import { NearbyPlaces } from '../../components/NearbyPlaces';
-import { FrequencyLookup } from '../../components/FrequencyLookup';
-import type { Coordinate } from '../../lib/geo';
-import { insideBounds } from '../../lib/navigation';
+import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading, TextField } from '@/components/FieldKit';
+import { useColors } from '@/hooks/useColors';
+import { distanceKm, formatCoordinate, initialBearingDegrees, kmToNm, nmToKm, parseCoordinate } from '@/lib/geo';
+import { useNavigation } from '@/context/NavigationContext';
+import { OfflineMap } from '@/components/OfflineMap';
+import { NavigationPacks } from '@/components/NavigationPacks';
+import { NearbyPlaces } from '@/components/NearbyPlaces';
+import { FrequencyLookup } from '@/components/FrequencyLookup';
+import type { Coordinate } from '@/lib/geo';
+import { insideBounds } from '@/lib/navigation';
 
 export default function MapMeasureScreen() {
   const colors = useColors();
@@ -114,7 +114,7 @@ export default function MapMeasureScreen() {
   return (
     <Screen
       eyebrow="Offline position tools"
-      title="Map & Measure"
+      title="Map"
       subtitle="Local maps · GPS · tap-to-measure"
     >
       <Callout title="Reference map — not an aviation chart">

@@ -22,6 +22,7 @@ function RootLayoutNav() {
       <Stack.Screen name="add-assignment" />
       <Stack.Screen name="imported-document" />
       <Stack.Screen name="privacy" />
+      <Stack.Screen name="quick-reference" />
     </Stack>
   );
 }

@@ -21,7 +21,13 @@ The initial focus is RFS, but the product should become agency agnostic so other
 
 **How to apply:** Keep agency/jurisdiction content separate. Preserve issuer, source, version, and rights provenance rather than treating RFS defaults as universal.
 
-The user requires a dedicated QRG tab, incident FCTAF plus statewide references, normal aerodrome CTAFs and airspace frequencies, km/NM conversion, and distance/direction measurements using map taps and/or current location.
+The user no longer wants a dedicated QRG tab: “Ditch the qrg tab and go with this design instead.” Use the supplied field redesign's Aviate, Navigate, Map, Comms and Settings navigation.
+
+**Why:** The user explicitly superseded the earlier dedicated-QRG-tab requirement.
+
+**How to apply:** Preserve reference provenance and unverified-content warnings without keeping a QRG tab.
+
+The user requires incident FCTAF plus statewide references, normal aerodrome CTAFs and airspace frequencies, km/NM conversion, and distance/direction measurements using map taps and/or current location.
 
 **Why:** The user called these out separately and repeatedly.
 

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Badge, Callout, Panel, Screen, SectionHeading } from '../../components/FieldKit';
-import { useColors } from '../../hooks/useColors';
-import { QUICK_REFERENCE } from '../../data/rfs-pack';
+import { Badge, Callout, Panel, Screen, SectionHeading } from '@/components/FieldKit';
+import { useColors } from '@/hooks/useColors';
+import { QUICK_REFERENCE } from '@/data/rfs-pack';
 
 type Side = 'fly' | 'communicate';
 
@@ -15,6 +15,7 @@ export default function QuickReferenceScreen() {
     <Screen
       eyebrow="NSW RFS launch pack"
       title="Quick Reference"
+      back
       subtitle="Transcribed from the supplied two-sided A5 mockup"
     >
       <Callout title="Unverified mockup — not an approved operational card">
@@ -35,7 +36,7 @@ export default function QuickReferenceScreen() {
             style={{
               flex: 1,
               minHeight: 46,
-              borderRadius: 13,
+              borderWidth: 3, borderColor: colors.ink,
               alignItems: 'center',
               justifyContent: 'center',
               paddingHorizontal: 8,

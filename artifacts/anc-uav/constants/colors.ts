@@ -1,59 +1,23 @@
 /**
- * Semantic design tokens for the mobile app.
- *
- * These tokens mirror the naming conventions used in web artifacts (index.css)
- * so that multi-artifact projects share a cohesive visual identity.
- *
- * Replace the placeholder values below with values that match the project's
- * brand. If a sibling web artifact exists, read its index.css and convert the
- * HSL values to hex so both artifacts use the same palette.
- *
- * To add dark mode, add a `dark` key with the same token names.
- * The useColors() hook will automatically pick it up.
+ * ANC UAV field theme. Day = glare-proof ink on paper. Night = low-emission near-black.
+ * `signal` (amber) is for FILLS only. `primary` is for text/icons and flips per mode for contrast.
  */
-
+const base = { signal: '#FFB400', onSignal: '#0A0A08', hazardDark: '#0A0A08' };
 const colors = {
   light: {
-    text: '#15252C',
-    tint: '#087D76',
-    background: '#EFF4F1',
-    foreground: '#15252C',
-    card: '#FFFFFF',
-    cardForeground: '#15252C',
-    primary: '#087D76',
-    primaryForeground: '#FFFFFF',
-    secondary: '#DDE9E5',
-    secondaryForeground: '#183934',
-    muted: '#E4ECE8',
-    mutedForeground: '#526761',
-    accent: '#F1D18A',
-    accentForeground: '#392A0D',
-    destructive: '#A63D36',
-    destructiveForeground: '#ffffff',
-    border: '#C9D9D3',
-    input: '#C9D9D3',
+    ...base, text: '#0A0A08', foreground: '#0A0A08', background: '#FBFAF4', card: '#EDEDE6', cardForeground: '#0A0A08',
+    tint: '#0A0A08', primary: '#0A0A08', primaryForeground: '#FFB400', secondary: '#DCDCD2', secondaryForeground: '#0A0A08',
+    muted: '#EDEDE6', mutedForeground: '#3B3B36', accent: '#FFB400', accentForeground: '#0A0A08',
+    destructive: '#C40000', destructiveForeground: '#FBFAF4', go: '#007A33', goForeground: '#FBFAF4',
+    border: '#0A0A08', input: '#0A0A08', ink: '#0A0A08',
   },
   dark: {
-    text: '#EAF3EF',
-    tint: '#70D2C1',
-    background: '#0B171C',
-    foreground: '#EAF3EF',
-    card: '#15252B',
-    cardForeground: '#EAF3EF',
-    primary: '#54C2B0',
-    primaryForeground: '#0A211D',
-    secondary: '#25373C',
-    secondaryForeground: '#E4EFEB',
-    muted: '#1B2B30',
-    mutedForeground: '#A7BBB5',
-    accent: '#EBC46D',
-    accentForeground: '#392A0D',
-    destructive: '#C95D53',
-    destructiveForeground: '#FFFFFF',
-    border: '#31464B',
-    input: '#31464B',
+    ...base, text: '#F4F1E8', foreground: '#F4F1E8', background: '#070708', card: '#15161A', cardForeground: '#F4F1E8',
+    tint: '#FFB400', primary: '#FFB400', primaryForeground: '#0A0A08', secondary: '#23252B', secondaryForeground: '#F4F1E8',
+    muted: '#15161A', mutedForeground: '#A9A79D', accent: '#FFB400', accentForeground: '#0A0A08',
+    destructive: '#FF4A3D', destructiveForeground: '#0A0A08', go: '#2BE06E', goForeground: '#0A0A08',
+    border: '#3A3C44', input: '#F4F1E8', ink: '#F4F1E8',
   },
-  radius: 14,
+  radius: 0,
 };
-
 export default colors;
