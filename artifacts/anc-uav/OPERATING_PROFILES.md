@@ -49,3 +49,5 @@ Import validates the whole file, then shows a preview before anything is saved: 
 The attempted automated browser lifecycle check could not reach ANC UAV because the private development preview required a Replit login. It made no profile changes. The interactive create/edit/switch/delete flow therefore still needs browser or device verification; passing storage-model tests and static previews are not a substitute for that check.
 
 The iOS Files picker and share sheet (Save to Files, AirDrop, cancelling the sheet) use standard system APIs but have not been exercised on a physical iPhone/iPad; verify that on device.
+
+The device and browser verification checklist and its (currently unrun) status are in `docs/PROFILE_DEVICE_VERIFICATION.md`.
