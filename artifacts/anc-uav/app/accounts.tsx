@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading, TextField } from '../components/FieldKit';
 import { useColors } from '../hooks/useColors';
-import type { VaultProvider } from './data/types';
-import { useAppData } from './context/AppDataContext';
-import { deleteProviderCredential, isVaultAvailable, saveProviderCredential, testProviderUnlock } from './lib/secure-vault';
+import type { VaultProvider } from '../data/types';
+import { useAppData } from '../context/AppDataContext';
+import { deleteProviderCredential, isVaultAvailable, saveProviderCredential, testProviderUnlock } from '../lib/secure-vault';
 
 const PROVIDERS: Array<{ id: VaultProvider; label: string }> = [
   { id: 'naips', label: 'NAIPS' },

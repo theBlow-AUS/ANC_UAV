@@ -16,7 +16,7 @@ export default function CommunicationsScreen() {
   const [duration, setDuration] = useState('');
   const [script, setScript] = useState('');
   const { activePack, incidentFrequencies, removeIncidentFrequency } = useAppData();
-  const isRfsPack = activePack.packId === RFS_PACK_ID;
+  const isRfsPack = activePack.isBuiltIn && activePack.id === RFS_PACK_ID;
   const visibleAssignments = useMemo(
     () => incidentFrequencies.filter((item) => item.packId === activePack.id),
     [incidentFrequencies, activePack.id],

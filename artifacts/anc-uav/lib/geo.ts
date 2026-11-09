@@ -4,6 +4,7 @@ const EARTH_RADIUS_KM = 6371.0088;
 const KM_PER_NM = 1.852;
 
 export function parseCoordinate(latitude: string, longitude: string): Coordinate | null {
+  if (!latitude.trim() || !longitude.trim()) return null;
   const lat = Number(latitude);
   const lon = Number(longitude);
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;

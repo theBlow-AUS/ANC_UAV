@@ -186,6 +186,32 @@ export default function LibraryScreen() {
         </Panel>
       )}
 
+      {!activePack.isBuiltIn ? (
+        <>
+          <SectionHeading title="Active pack references" detail="Imported text — unverified and read-only." />
+          {activePack.documents.map((document) => (
+            <Panel key={document.id}>
+              <Badge tone="warning">UNVERIFIED SOURCE</Badge>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>{document.title}</Text>
+              <Text style={{ fontSize: 12, color: colors.mutedForeground }}>{document.source} · {document.version}</Text>
+              {document.sections.map((section, index) => (
+                <View key={`${document.id}-${index}`} style={{ gap: 5 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>{section.heading}</Text>
+                  <Text selectable style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>{section.body}</Text>
+                </View>
+              ))}
+            </Panel>
+          ))}
+          {activePack.rules.map((rule) => (
+            <Panel key={rule.id}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>{rule.title}</Text>
+              <Text selectable style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>{rule.statement}</Text>
+              <Text style={{ fontSize: 12, color: colors.mutedForeground }}>{rule.sourceReference} · unverified</Text>
+            </Panel>
+          ))}
+        </>
+      ) : null}
+
       <SectionHeading title="Pack format" detail="Data only; no scripts, plug-ins, or network endpoints." />
       <Panel>
         <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground }}>
