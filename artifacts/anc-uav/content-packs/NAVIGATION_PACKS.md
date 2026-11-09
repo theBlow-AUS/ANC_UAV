@@ -27,12 +27,22 @@ entered into:
 <https://www.airservicesaustralia.com/industry-info/aeronautical-information-management/electronic-data/copyright-licence-request-process>.
 Terms checked 9 November 2026. A provider account is not authorization.
 
-Consequently the app ships **no authoritative aviation dataset**. It supports
-on-device import of separately authorized packs with a rights-confirmation
-step; that confirmation is an operator assertion, not a legal review. Pack
-metadata cannot grant itself trusted/approved status. Do not redistribute
-provider data, build an automated scraping adapter, or label results approved
-without the corresponding data rights and aviation content review.
+Consequently the app ships **no authoritative or approved aviation dataset**.
+It does bundle a clearly labelled, partial openAIP area-frequency reference
+under the published CC BY-NC 4.0 terms, with attribution and source/rights links.
+openAIP expressly permits shipping its data in paid or commercial apps if the
+data itself is not exclusively sold and remains free to use/share; altered or
+derived data must be shared under the same or a similar licence. The bundled
+reference is uncertified, has no supplied effective dates, and must not be used
+for primary navigation or flight planning. See `COMMUNITY_AVIATION.md` for the
+exact source review and limitations.
+
+The app also supports on-device import of separately authorized packs with a
+rights-confirmation step; that confirmation is an operator assertion, not a
+legal review. Pack metadata cannot grant itself trusted/approved status. Do not
+redistribute other provider data, build an automated scraping adapter, or
+label results approved without the corresponding data rights and aviation
+content review.
 
 A separate bundled **OurAirports community reference** now supplies Australian
 airport-associated frequencies under that publisher's public-domain release.
@@ -40,12 +50,20 @@ These are point-associated records, not authoritative applicability rules or
 part of this navigation-pack contract. See `COMMUNITY_AVIATION.md` for the source,
 licence, update behavior and airspace coverage limitations.
 
+The bundled openAIP pack is a separate secondary reference, not a certified
+chart. Its frequency values are linked directly to exported area geometries.
+The export does not provide effective dates; these remain unknown in the pack.
+Airservices' paid airspace and general aviation products may be a future
+authoritative source, but their commercial redistribution terms and record-level
+frequency-to-area link have not been established for this app. See
+`COMMUNITY_AVIATION.md` for the source review and coverage limits.
+
 ## Runtime and storage
 
 Everything is computed locally. There is no map SDK, tile URL, API key,
 background download or Replit service. The separate community reference makes
 device-direct GitHub requests only on its explicit update action; this navigation
-import flow makes no server requests. On native devices the
+import flow and bundled openAIP reference make no server requests. On native devices the
 document picker reads a local JSON file and removes its temporary cache copy
 after parsing; the validated pack is saved to device-local AsyncStorage. Web
 preview uses the browser file picker and local storage, not native filesystem
@@ -72,8 +90,13 @@ Install the replacement edition manually after independently checking it.
 
 `data/navigation-pack.ts` is the runtime contract; unknown fields are rejected.
 `data/australia-reference.json` is a valid reference-only pack.
+`data/openaip-au-pack-manifest.json` records the compressed secondary snapshot.
+Rebuild with `pnpm --filter @workspace/anc-uav run build:openaip`; the script
+rejects unexpected geometry, units, datums, hours or record counts instead of
+silently dropping unsupported source rules.
 `scripts/test-navigation.cjs` contains clearly synthetic aviation fixtures for
-engineering checks, **not operational data and not included in the app**.
+engineering checks; the bundled openAIP reference is separately tested and is
+not approved operational data.
 
 Top-level fields:
 
@@ -93,7 +116,7 @@ Top-level fields:
   `uncontrolled`, `aerodrome-unknown`, `locality`), per-record `provenance`,
   and `statusNote`. Classification is not a live tower-status determination.
 * `frequencies`: unique `id`, `label`, `service` (`CTAF`, `TOWER`, `APPROACH`,
-  `CENTRE`, `ATIS`, `BROADCAST`), `frequencyMHz` as a string with three decimals,
+  `CENTRE`, `ATIS`, `BROADCAST`, `AREA_FREQUENCY`), `frequencyMHz` as a string with three decimals,
   per-record `provenance` and `applicability`. CTAF requires `aerodromeId`
   referencing a non-locality place. Non-CTAF records may also reference a place.
   FCTAF is not accepted in navigation packs: use received incident assignments.
@@ -124,8 +147,11 @@ separate frequency records. Multiple records with the same MHz are allowed and
 retained, including overlapping services and different pack editions.
 
 Altitude is in feet for `AMSL` and `AGL`, and flight-level units for `FL`.
-Bounds are inclusive. No terrain/QNH/GPS-altitude/datum conversion is inferred.
-Unknown altitude or a datum mismatch produces **possible — check conditions**.
+Bounds are inclusive. A band may use one shared `reference`, or separate
+`lower` and `upper` objects each with `reference` and `value`, preserving source
+limits whose endpoints use different datums. No terrain/QNH/GPS-altitude/datum
+conversion is inferred. For mixed datums, only a same-datum violated endpoint
+can exclude a record; otherwise it remains **possible — check conditions**.
 Convert recurring schedules and local/DST times into explicit UTC windows
 covering the source validity period. Empty `activeUtc` explicitly means H24
 within source validity. Unknown or conditional schedules must use `condition`

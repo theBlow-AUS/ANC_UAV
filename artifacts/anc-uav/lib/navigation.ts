@@ -49,10 +49,24 @@ export function frequencyApplicability(f: NavigationFrequency, q: QueryContext):
   else if (a.area.kind === 'circle'
     ? distanceKm(q.position, a.area.centre) > a.area.radiusKm
     : !insideRing(q.position, a.area.ring)) return { state: 'outside', reasons: ['Outside published geographic area'] };
-  if (q.altitude === null || !Number.isFinite(q.altitude) || q.altitudeReference !== a.altitude.reference)
-    reasons.push(`Needs altitude in ${a.altitude.reference}; no datum conversion assumed`);
-  else if (q.altitude < a.altitude.lower || q.altitude > a.altitude.upper)
-    return { state: 'outside', reasons: ['Outside published altitude band'] };
+  const altitude = 'reference' in a.altitude
+    ? {
+      lower: { reference: a.altitude.reference, value: a.altitude.lower },
+      upper: { reference: a.altitude.reference, value: a.altitude.upper },
+    }
+    : a.altitude;
+  if (q.altitude === null || !Number.isFinite(q.altitude)) {
+    reasons.push(`Needs altitude in ${[...new Set([altitude.lower.reference, altitude.upper.reference])].join(' and ')}`);
+  } else {
+    const lowerKnown = q.altitudeReference === altitude.lower.reference;
+    const upperKnown = q.altitudeReference === altitude.upper.reference;
+    if (lowerKnown && q.altitude < altitude.lower.value)
+      return { state: 'outside', reasons: ['Below published lower altitude limit'] };
+    if (upperKnown && q.altitude > altitude.upper.value)
+      return { state: 'outside', reasons: ['Above published upper altitude limit'] };
+    if (!lowerKnown || !upperKnown)
+      reasons.push(`Needs altitude in ${[...new Set([altitude.lower.reference, altitude.upper.reference])].join(' and ')}; no datum conversion assumed`);
+  }
   const time = parseQueryUtc(q.utc);
   if (!Number.isFinite(time)) reasons.push('UTC time unknown');
   else {

@@ -118,7 +118,7 @@ export default function MapMeasureScreen() {
       subtitle="Local maps · GPS · tap-to-measure"
     >
       <Callout title="Reference map — not an aviation chart">
-        The bundled public-domain Australia overview is deliberately coarse. Zooming does not add detail. No authoritative aviation pack is bundled; absent data never means clear. All maps and calculations stay on this device.
+        The bundled public-domain Australia overview is deliberately coarse. Zooming does not add detail. A partial openAIP area-frequency reference is bundled, but it is uncertified and not for primary navigation or flight planning. No authoritative chart or CTAF applicability coverage is bundled; absent data never means clear. All maps and calculations stay on this device.
       </Callout>
 
       <Panel>

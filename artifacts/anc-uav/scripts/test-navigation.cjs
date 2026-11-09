@@ -7,6 +7,7 @@ require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileMo
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { parseNavigationPack } = require('../data/navigation-pack.ts');
+const { OPENAIP_AU_PACK } = require('../data/openaip-pack.ts');
 const { distanceKm, initialBearingDegrees, kmToNm, nmToKm, parseCoordinate } = require('../lib/geo.ts');
 const { frequencyApplicability, lookupFrequencies, nearbyPlaces, insideRing, sourceStatus, coordinateToMap, mapToCoordinate, parseQueryUtc } = require('../lib/navigation.ts');
 const reference = parseNavigationPack(require('../data/australia-reference.json'));
@@ -40,6 +41,23 @@ test('bundled map is lawful reference with no fabricated aviation records', () =
   assert.ok(reference.places.length > 20);
   assert.ok(reference.places.every(p => p.kind === 'locality'));
   assert.equal(sourceStatus(reference.provenance, q.utc), 'VALIDITY NOT SUPPLIED');
+});
+test('bundled openAIP secondary reference preserves licensed, linked area-frequency source records', () => {
+  const source = OPENAIP_AU_PACK;
+  assert.equal(source.id, 'openaip-au-area-frequency');
+  assert.equal(source.provenance.licence, 'CC BY-NC 4.0');
+  assert.equal(source.provenance.effectiveFrom, null);
+  assert.equal(source.provenance.effectiveTo, null);
+  assert.equal(source.coverage.frequencies, 'partial');
+  assert.equal(source.frequencies.length, 1096);
+  assert.ok(source.frequencies.every(f => f.service === 'AREA_FREQUENCY'));
+  assert.ok(source.frequencies.every(f => f.applicability.area.kind === 'polygon'));
+  assert.ok(source.frequencies.every(f => f.provenance.effectiveFrom === null && f.provenance.effectiveTo === null));
+  assert.ok(source.frequencies.every(f => f.applicability.condition.includes('uncertified')));
+  assert.equal(source.frequencies.some(f => f.service === 'CTAF' || f.service === 'FCTAF'), false);
+  const values = source.frequencies.map(f => f.frequencyMHz);
+  assert.equal(new Set(values).size, 155, 'overlapping/duplicate channels remain distinct records');
+  assert.equal(lookupFrequencies([source], { position: null, altitude: null, altitudeReference: 'AMSL', utc: q.utc }).length, 1096);
 });
 test('distance, true bearing and unit conversions', () => {
   assert.equal(distanceKm(p, p), 0);
@@ -86,6 +104,17 @@ test('polygon interior, edge, vertex and exterior', () => {
 test('altitude band includes endpoints but not outside band', () => {
   for (const altitude of [0, 5000]) assert.equal(frequencyApplicability(frequency, { ...q, altitude }).state, 'matches');
   for (const altitude of [-1, 5001]) assert.equal(frequencyApplicability(frequency, { ...q, altitude }).state, 'outside');
+});
+test('mixed published altitude datums only exclude by a same-datum violated endpoint', () => {
+  const f = clone(frequency);
+  f.applicability.altitude = {
+    lower: { reference: 'AGL', value: 0 },
+    upper: { reference: 'FL', value: 245 },
+  };
+  assert.equal(frequencyApplicability(f, { ...q, altitudeReference: 'AGL', altitude: -1 }).state, 'outside');
+  assert.equal(frequencyApplicability(f, { ...q, altitudeReference: 'AGL', altitude: 1 }).state, 'possible');
+  assert.equal(frequencyApplicability(f, { ...q, altitudeReference: 'FL', altitude: 246 }).state, 'outside');
+  assert.equal(frequencyApplicability(f, { ...q, altitudeReference: 'FL', altitude: 245 }).state, 'possible');
 });
 test('unknown position/altitude and datum mismatch are possible, not clear', () => {
   for (const change of [{ position: null }, { altitude: null }, { altitudeReference: 'AGL' }, { altitudeReference: 'FL' }])

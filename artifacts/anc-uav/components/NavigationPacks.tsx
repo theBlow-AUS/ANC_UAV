@@ -47,9 +47,12 @@ export function NavigationPacks() {
       <Text style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 19 }}>
         {active.name} is the displayed map. Nearby places and frequency lookup search every installed pack, not only this map. Imported claims of completeness or approval are not independently verified.
       </Text>
-      {packs.map(pack => <ActionButton key={pack.id} label={`${active.id === pack.id ? 'Selected: ' : 'Show: '}${pack.name}`}
+      {packs.filter(pack => pack.land.length > 0 || pack.places.length > 0).map(pack => <ActionButton key={pack.id} label={`${active.id === pack.id ? 'Selected: ' : 'Show: '}${pack.name}`}
         secondary={active.id !== pack.id} disabled={!ready || busy || !!pending}
         onPress={() => void perform(() => select(pack.id))} testID={`select-nav-${pack.id}`} />)}
+      {packs.filter(pack => pack.land.length === 0 && pack.places.length === 0).map(pack => <Text key={pack.id} style={{ color: colors.mutedForeground, fontSize: 12, lineHeight: 18 }}>
+        {pack.name} · {pack.coverage.frequencies.toUpperCase()} frequencies · reference only{'\n'}{pack.coverage.notes}
+      </Text>)}
       <SourceDetails source={active.provenance} utc={query.utc} />
       <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{active.coverage.notes}</Text>
       <ActionButton label="Import navigation pack" icon="download" disabled={!ready || busy || picking || !!pending}
@@ -57,7 +60,7 @@ export function NavigationPacks() {
           setPicking(true);
           void perform(async () => setPending(await pickNavigationPack())).finally(() => setPicking(false));
         }} />
-      {active.id !== 'natural-earth-au' ? <ActionButton label="Remove selected pack" icon="trash-2" secondary disabled={busy || !!pending}
+      {active.id !== 'natural-earth-au' && active.id !== 'openaip-au-area-frequency' ? <ActionButton label="Remove selected pack" icon="trash-2" secondary disabled={busy || !!pending}
         onPress={() => Alert.alert('Remove navigation pack?', 'Only this device’s copy is removed. Keep your original pack file if you need to reinstall it.', [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Remove', style: 'destructive', onPress: () => void perform(() => remove(active.id)) },

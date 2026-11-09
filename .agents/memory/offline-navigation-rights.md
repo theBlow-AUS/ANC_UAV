@@ -36,13 +36,21 @@ storage time and label saved camera images historical even just after import.
 
 Airport-associated community frequencies must remain distinct from spatial
 airspace/CTAF applicability, even when the data itself is freely redistributable.
+openAIP's Australian airspace export is a separate licensed secondary source:
+its terms permit inclusion in paid/commercial apps with attribution, the data
+not being exclusively sold and remaining free to use/share, and derived data
+released under the same or a similar licence. It remains uncertified and is not
+for primary navigation or flight planning.
 
 **Why:** OurAirports' public-domain release permits reuse, but its airport and
 frequency CSVs do not establish sector boundaries, altitude bands, tower hours,
-effective dates or national completeness. “Open” in a provider's name also does
-not imply unrestricted multi-operator commercial redistribution.
+effective dates or national completeness. openAIP's explicit app permission is
+conditional and is not a general commercial redistribution licence for other
+providers or products.
 
-**How to apply:** Show source records as unverified discovery references.
-Never invent service radii to fit an applicability contract, infer controlled
-status from airport type or treat retrieval time as an effective date. Review
-each additional source's actual intended-use terms independently.
+**How to apply:** Show airport points as unverified discovery references. For
+openAIP, retain attribution and licence/source links, keep its data available
+under the required licence, and never present it as certified/current. Never
+invent service radii, infer controlled status from airport type or treat
+retrieval time as an effective date. Review each additional source's actual
+intended-use terms independently.

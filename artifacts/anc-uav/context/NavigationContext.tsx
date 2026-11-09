@@ -2,10 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { parseNavigationPack, type NavigationPack } from '../data/navigation-pack';
 import referenceJson from '../data/australia-reference.json';
+import { OPENAIP_AU_PACK } from '../data/openaip-pack';
 import type { QueryContext } from '../lib/navigation';
 import { MAX_NAVIGATION_BYTES } from '../lib/navigation-storage';
 
 const REFERENCE = parseNavigationPack(referenceJson);
+const BUILTIN_PACKS = [REFERENCE, OPENAIP_AU_PACK];
+const BUILTIN_PACK_IDS = new Set(BUILTIN_PACKS.map(pack => pack.id));
+const MAP_PACKS = (packs: NavigationPack[]) => packs.filter(pack => pack.land.length > 0 || pack.places.length > 0);
 const KEY = 'anc-uav.navigation.v1';
 type Value = {
   packs: NavigationPack[]; active: NavigationPack; ready: boolean; error: string;
@@ -43,9 +47,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       const input = JSON.parse(raw);
       if (!Array.isArray(input.packs) || input.packs.length > 10 || typeof input.activeId !== 'string') throw new Error('Invalid navigation store');
       const packs = input.packs.map((p: unknown) => parseNavigationPack(p));
-      if (packs.some((p: NavigationPack) => p.id === REFERENCE.id) || new Set(packs.map((p: NavigationPack) => p.id)).size !== packs.length)
+      if (packs.some((p: NavigationPack) => BUILTIN_PACK_IDS.has(p.id)) || new Set(packs.map((p: NavigationPack) => p.id)).size !== packs.length)
         throw new Error('Conflicting pack identifiers');
-      if (input.activeId !== REFERENCE.id && !packs.some((p: NavigationPack) => p.id === input.activeId))
+      if (input.activeId !== REFERENCE.id && !MAP_PACKS(packs).some((p: NavigationPack) => p.id === input.activeId))
         throw new Error('Selected navigation pack is missing');
       const next = { packs, activeId: input.activeId };
       if (mounted) { current.current = next; setSaved(next); }
@@ -73,7 +77,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       throw e;
     } finally { locked.current = false; setBusy(false); }
   }
-  const packs = [REFERENCE, ...saved.packs];
+  const packs = [...BUILTIN_PACKS, ...saved.packs];
   const active = packs.find(p => p.id === saved.activeId) ?? REFERENCE;
   return <Context.Provider value={{
     packs, active, ready, error, busy, query: { ...query, utc: liveTime ? clock : query.utc }, setQuery, liveTime, setLiveTime, altitudeInput, setAltitudeInput,
@@ -89,14 +93,23 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     },
     install: async pack => {
       const validated = parseNavigationPack(pack);
-      if (validated.id === REFERENCE.id) throw new Error('The bundled reference cannot be replaced.');
+      if (BUILTIN_PACK_IDS.has(validated.id)) throw new Error('A bundled reference cannot be replaced.');
       await update(s => {
         if (!s.packs.some(p => p.id === validated.id) && s.packs.length >= 10) throw new Error('Remove a pack before installing more than 10.');
-        return { packs: [...s.packs.filter(p => p.id !== validated.id), validated], activeId: validated.id };
+        return {
+          packs: [...s.packs.filter(p => p.id !== validated.id), validated],
+          activeId: MAP_PACKS([validated]).length ? validated.id : s.activeId,
+        };
       });
     },
-    select: async id => { if (!packs.some(p => p.id === id)) throw new Error('Pack not installed.'); await update(s => ({ ...s, activeId: id })); },
-    remove: async id => { if (id === REFERENCE.id) throw new Error('Bundled reference cannot be removed.'); await update(s => ({ packs: s.packs.filter(p => p.id !== id), activeId: s.activeId === id ? REFERENCE.id : s.activeId })); },
+    select: async id => {
+      if (!MAP_PACKS(packs).some(p => p.id === id)) throw new Error('Map pack not installed.');
+      await update(s => ({ ...s, activeId: id }));
+    },
+    remove: async id => {
+      if (BUILTIN_PACK_IDS.has(id)) throw new Error('Bundled reference cannot be removed.');
+      await update(s => ({ packs: s.packs.filter(p => p.id !== id), activeId: s.activeId === id ? REFERENCE.id : s.activeId }));
+    },
   }}>{children}</Context.Provider>;
 }
 export function useNavigation() {

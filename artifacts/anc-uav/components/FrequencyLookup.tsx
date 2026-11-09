@@ -9,6 +9,10 @@ import { SourceDetails } from './NavigationPacks';
 import { Pager } from './CommunityFrequencies';
 import { communityPage } from '../lib/community-aviation';
 
+function serviceLabel(service: string) {
+  return service === 'AREA_FREQUENCY' ? 'AREA FREQUENCY' : service;
+}
+
 export function FrequencyLookup() {
   const colors = useColors();
   const { packs, query, setQuery, ready, error, liveTime, setLiveTime, altitudeInput, setAltitudeInput } = useNavigation();
@@ -22,10 +26,10 @@ export function FrequencyLookup() {
   const labelStyle = { color: colors.mutedForeground, fontSize: 12, lineHeight: 18 };
   return <>
     <SectionHeading title="Imported applicability lookup" detail="All installed records are evaluated; nearest aerodrome alone does not determine applicable frequencies." />
-    <Callout title={anyData ? 'Imported aviation data — verify independently' : 'No spatial applicability data imported'}>
+    <Callout title={anyData ? 'Aviation reference data — verify independently' : 'No spatial applicability data available'}>
       {(error ? 'Stored packs could not be loaded. ' : '') + (anyData
-        ? 'Results match imported geometry, altitude and UTC rules only, not operational clearance. Completeness, temporary changes and NOTAMs are not verified.'
-        : 'Community airport references are bundled separately in Comms, but no imported airspace, broadcast-area or CTAF applicability geometry is available. This section cannot confirm which frequency applies at a position, altitude or time. No results does NOT mean clear airspace or no frequency requirement.') +
+        ? 'Results reflect only the installed reference geometry, altitude and UTC rules, not operational clearance. Completeness, temporary changes and NOTAMs are not verified. The bundled openAIP data is uncertified, incomplete and not for primary navigation or flight planning. Verify current authorized publications and NOTAMs.'
+        : 'Community airport references are bundled separately in Comms, but no spatial airspace, broadcast-area or CTAF applicability geometry is available. This section cannot confirm which frequency applies at a position, altitude or time. No results does NOT mean clear airspace or no frequency requirement.') +
         ' Incident FCTAF is never inferred from GPS or these packs.'}
     </Callout>
     <Panel>
@@ -72,14 +76,16 @@ export function FrequencyLookup() {
         <Pager label="Candidates" page={pg.page} pages={pg.pages} total={pg.total} onPage={p => setPages({ ...pages, [group]: p })} />
         {pg.items.map(({ frequency: f, pack, state, reasons }) => <Panel key={`${pack.id}-${f.id}`}>
           <Badge tone="warning">{state === 'matches' ? 'MATCHES IMPORTED RULES — UNVERIFIED' : 'POSSIBLE — CHECK CONDITIONS'}</Badge>
-          <Text style={{ color: colors.primary, fontSize: 23, fontWeight: '700' }}>{f.frequencyMHz} MHz · {f.service}</Text>
+          <Text style={{ color: colors.primary, fontSize: 23, fontWeight: '700' }}>{f.frequencyMHz} MHz · {serviceLabel(f.service)}</Text>
           <Text style={{ color: colors.foreground, fontWeight: '700' }}>{f.label}</Text>
           <Text style={labelStyle}>{pack.name}{f.aerodromeId ? ` · ${pack.places.find(p => p.id === f.aerodromeId)?.name}` : ''}</Text>
           <Text style={labelStyle}>
             Geographic rule: {f.applicability.area.kind === 'circle'
               ? `${f.applicability.area.radiusKm} km from ${f.applicability.area.centre.latitude}, ${f.applicability.area.centre.longitude}`
               : `${f.applicability.area.ring.length}-vertex published polygon`}
-            {'\n'}Altitude: {f.applicability.altitude.lower}–{f.applicability.altitude.upper} {f.applicability.altitude.reference === 'FL' ? 'FL' : `ft ${f.applicability.altitude.reference}`}
+            {'\n'}Altitude: {'reference' in f.applicability.altitude
+              ? `${f.applicability.altitude.lower}–${f.applicability.altitude.upper} ${f.applicability.altitude.reference === 'FL' ? 'FL' : `ft ${f.applicability.altitude.reference}`}`
+              : `${f.applicability.altitude.lower.value} ${f.applicability.altitude.lower.reference === 'FL' ? 'FL' : `ft ${f.applicability.altitude.lower.reference}`} – ${f.applicability.altitude.upper.value} ${f.applicability.altitude.upper.reference === 'FL' ? 'FL' : `ft ${f.applicability.altitude.upper.reference}`}`}
             {'\n'}UTC: {f.applicability.activeUtc.length ? f.applicability.activeUtc.map(t => `${t.from} → ${t.to}`).join('; ') : 'H24 within source validity'}
           </Text>
           {reasons.length ? <Text style={{ ...labelStyle, color: colors.destructive }}>{reasons.join('\n')}</Text> : null}

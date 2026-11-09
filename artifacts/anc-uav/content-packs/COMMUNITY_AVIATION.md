@@ -94,19 +94,29 @@ than silent destructive recovery.
 
 ## Airspace/broadcast-area source review
 
-The search has **not established an unrestricted, complete Australian
-airspace/broadcast-area dataset with trustworthy linked radio frequencies**.
-It does not establish that no such source can exist.
+The bundled secondary area-frequency reference comes from openAIP's Australian
+airspace export. Its frequencies are directly attached to source airspace
+records, so the app does not join airport points to invented sectors. This is
+not authoritative aviation data and is never presented as a primary source.
 
 | Candidate | Rights/access findings | Decision |
 | --- | --- | --- |
 | OurAirports | Public domain; point aerodromes and associated frequency rows | Bundle community reference records; no published sector geometry/applicability in these CSVs |
-| openAIP | <https://www.openaip.net/legal> describes CC BY-NC 4.0 with additional commercial-app wording and attribution/redistribution conditions; data is expressly uncertified | Do not bundle until intended multi-operator/commercial use and exact downloaded product terms are resolved; do not assume “open” means unrestricted |
-| Airservices Airspace Data | <https://data.airservicesaustralia.com/data-product/airspace-data> is a paid subscription product, with additional commercialisation charges described | Not used as a free open dataset; existing permission-gated provider work remains separate |
+| openAIP | Its [terms](https://www.openaip.net/legal) identify CC BY-NC 4.0, require attribution, and expressly allow shipping openAIP data in paid/commercial applications if the data itself is not exclusively sold and remains free to use and share. Altered or derived data must be distributed under the same or a similar licence. The [documentation](https://www.openaip.net/docs) lists daily country airspace exports. | **Bundled as a secondary reference** under those stated conditions, with openAIP attribution, source links and CC BY-NC 4.0 provenance. The reviewed Australian `au_asp.json` contained 1,911 airspace records, including 1,096 records with a directly linked MHz frequency, polygon and vertical limits. The official schema documents frequency units, altitude datums, daily operating hours and activation flags. All 1,096 frequency-area records have seven daily 00:00–00:00 intervals; an individual record page renders that schedule as 24H. Source-effective dates were not supplied. openAIP explicitly says its data is uncertified, contains errors and must not be relied on for primary navigation or flight planning. It is labelled unverified and partial; the app does not infer operational clearance. |
+| Airservices Airspace Data and General Aviation Data | The [Airspace Data](https://data.airservicesaustralia.com/data-product/airspace-data) product describes Australian airspace features, boundaries, vertical limits and conditional status. The separate [General Aviation Data](https://data.airservicesaustralia.com/data-product/general-aviation-data) product lists ATS communication frequencies. Both require subscription; the product pages state AUD 1,950 and additional royalties or end-user charges for commercialised products/services. | A potential authoritative route, but there is no subscription, executed redistribution agreement, royalty schedule or verified link between the two products' frequency and area records for this app. Do not use until those rights and joins are confirmed. This is separate from permission-gated personal provider downloads. |
 | CASA public explanatory publications | Some explanatory text is CC BY, but the reviewed general airspace-structure/procedure material is not a machine-readable national polygon/frequency database | Do not manufacture boundaries or assignments from explanatory diagrams/text |
 
-Keep absent/incomplete airspace coverage visible. Authorized imported airspace
-packs continue to work; community airport results do not fill that gap.
+The packaged openAIP snapshot is reproducible with
+`pnpm --filter @workspace/anc-uav run build:openaip`. The build records a source
+SHA-256 and retrieval timestamp in `data/openaip-au-pack-manifest.json`; the
+compressed static asset is decoded and validated locally. No product-runtime
+download, Replit callback or network request is used. Source-effective validity
+remains unknown, results stay possible/unverified, and the source warning is
+shown for every candidate. Keep incomplete coverage visible. Community airport
+points remain discovery references only and never feed spatial applicability.
+The existing import path remains available for other independently authorized
+and reviewed packs; an operator import or rights checkbox does not establish
+data correctness or grant redistribution rights.
 
 ## Checks and remaining limits
 

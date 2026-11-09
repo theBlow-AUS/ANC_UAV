@@ -28,13 +28,24 @@ const area = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('circle'), centre: coordinate, radiusKm: z.number().positive().max(2000) }).strict(),
   z.object({ kind: z.literal('polygon'), ring: z.array(coordinate).min(3).max(2000) }).strict(),
 ]);
-const applicability = z.object({
-  area,
-  altitude: z.object({
+const altitudeLimit = z.object({
+  reference: z.enum(['AMSL', 'AGL', 'FL']),
+  value: z.number().min(-2000).max(100000),
+}).strict();
+const altitudeBand = z.union([
+  // Compact form for source bands using one common datum.
+  z.object({
     reference: z.enum(['AMSL', 'AGL', 'FL']),
     lower: z.number().min(-2000).max(100000),
     upper: z.number().min(-2000).max(100000),
   }).strict().refine(a => a.lower <= a.upper),
+  // Independent endpoint datums preserve source limits that straddle datums.
+  z.object({ lower: altitudeLimit, upper: altitudeLimit }).strict()
+    .refine(a => a.lower.reference !== a.upper.reference || a.lower.value <= a.upper.value),
+]);
+const applicability = z.object({
+  area,
+  altitude: altitudeBand,
   // Empty means H24 within the source validity interval. Otherwise the union
   // of explicitly expanded UTC intervals applies (no local-time assumptions).
   activeUtc: z.array(z.object({ from: date, to: date }).strict().refine(t => Date.parse(t.from) < Date.parse(t.to))).max(2000),
@@ -63,7 +74,7 @@ export const navigationPackSchema = z.object({
   }).strict()).max(15000),
   frequencies: z.array(z.object({
     id: text, label: text,
-    service: z.enum(['CTAF', 'TOWER', 'APPROACH', 'CENTRE', 'ATIS', 'BROADCAST']),
+    service: z.enum(['CTAF', 'TOWER', 'APPROACH', 'CENTRE', 'ATIS', 'BROADCAST', 'AREA_FREQUENCY']),
     frequencyMHz: z.string().regex(/^(11[8-9]|12\d|13[0-6])\.\d{3}$/),
     aerodromeId: z.string().optional(),
     provenance, applicability,

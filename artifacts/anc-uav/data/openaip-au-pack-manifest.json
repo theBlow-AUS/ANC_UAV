@@ -1,0 +1,14 @@
+{
+  "publisher": "openAIP",
+  "source": "https://storage.openaip.net/openaip-system-exports/au_asp.json",
+  "rightsReference": "https://www.openaip.net/legal",
+  "licence": "CC BY-NC 4.0",
+  "retrievedAt": "2026-11-09T20:54:01.936Z",
+  "sourceSha256": "f5acaa26986db0347b13abdd84af7833953d99cb9417cbfab241162140c44aca",
+  "sourceBytes": 7885589,
+  "sourceAirspaceRecords": 1911,
+  "linkedFrequencyRecords": 1096,
+  "packBytes": 7716854,
+  "compressedPackBytes": 1055357,
+  "packSha256": "960e08b99bd0519485e33b2b52a46089a13a5d6fd89a6fd5698b21ba4a241104"
+}
