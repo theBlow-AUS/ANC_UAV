@@ -39,8 +39,8 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Aviate', tabBarIcon: icon('send') }} />
       <Tabs.Screen name="navigate" options={{ title: 'Navigate', tabBarIcon: icon('compass') }} />
-      <Tabs.Screen name="map" options={{ title: 'Map', tabBarIcon: icon('map') }} />
       <Tabs.Screen name="comms" options={{ title: 'Comms', tabBarIcon: icon('radio') }} />
+      <Tabs.Screen name="map" options={{ title: 'Map', tabBarIcon: icon('map') }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: icon('sliders') }} />
       <Tabs.Screen name="library" options={{ href: null }} />
     </Tabs>
