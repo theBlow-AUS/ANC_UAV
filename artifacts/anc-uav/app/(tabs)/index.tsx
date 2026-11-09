@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActionButton, Badge, Callout, Grid, Hazard, Screen, Seg, Tile } from '@/components/FieldKit';
+import { ActionButton, Badge, Callout, Grid, Hazard, Screen, Tile } from '@/components/FieldKit';
+import { AircraftTiles } from '@/components/AircraftKit';
 import { CallButton } from '@/components/CallButton';
 import { PriorityRail } from '@/components/PriorityRail';
 import { useAppData } from '@/context/AppDataContext';
@@ -10,7 +10,6 @@ import { EMERGENCY } from '@/lib/ui-store';
 export default function AviateScreen() {
   const ui = useUi();
   const { storageError, activePack } = useAppData();
-  const [vlos, setVlos] = useState<'mini' | 'm30t'>('mini');
   const cols = ui.wide ? 4 : 2;
 
   return (
@@ -26,12 +25,11 @@ export default function AviateScreen() {
         <Tile label="Crewed aircraft vertical" value="500" unit="ft" note="Mockup figure" />
         <Tile label="Crewed aircraft horizontal" value="1500" unit="m" note="Mockup figure" />
       </Grid>
-      <Seg label="Model-specific VLOS figure from home point (mockup)" value={vlos} onChange={setVlos} options={[['mini', 'Mavic Mini'], ['m30t', 'Matrice 30T']]} />
-      <Tile hot label="Listed distance from home point" value={vlos === 'mini' ? '500' : '1000'} unit="m" note="Card figure for this model only. Not a universal limit." />
+      <AircraftTiles />
       <Hazard title="Crewed aircraft nearby">The mockup says: if horizontal separation is lost, descend to the lowest safe altitude or land. Confirm the controlled procedure.</Hazard>
       <ActionButton secondary icon="radio" label="Traffic call script" onPress={() => router.navigate({ pathname: '/comms', params: { sc: 'air' } })} />
       <ActionButton secondary icon="book-open" label="Full quick reference" onPress={() => router.push('/quick-reference')} />
-      <Callout title="Reference only">Every figure here is transcribed from the supplied QRG mockup and is unverified. It does not authorise a flight. Confirm against current RFS and AUAVS procedures and your aircraft documentation.</Callout>
+      <Callout title="Reference only">General reference figures come from the unverified QRG mockup. Aircraft distances are operator-configured, with unverified starter values. Neither authorises a flight. Confirm against your current operations manual, agency procedures and aircraft documentation.</Callout>
     </Screen>
   );
 }

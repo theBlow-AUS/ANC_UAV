@@ -33,6 +33,12 @@ The user requires incident FCTAF plus statewide references, normal aerodrome CTA
 
 **How to apply:** Missing aviation/map data must be shown as missing, not as a clear or safe result. Never infer an incident-assigned FCTAF from location.
 
+Aircraft distances must be user-configurable from their own operations manuals. The user specified Mini, M30T and combined Matrice 4/5T defaults, with 800 m for Matrice 4/5T, and aircraft-row caps of four on phones and six on tablets.
+
+**Why:** The user supplied these product requirements; the 800 m figure is their requested default, not independently verified manufacturer or regulatory guidance.
+
+**How to apply:** Do not treat a default or a user-entered manual reference as operational approval. Preserve operator editing and device-size row limits when changing this feature.
+
 Account ownership is not permission for a third-party app to automate or redistribute provider data. Credential storage is device-only; provider download adapters remain gated on reviewed authorization and terms. Imported policies and mockup QRG material do not become approved operational content merely by import.
 
 **Why:** No provider/agency data agreement or operational content approval has been established for the product.
