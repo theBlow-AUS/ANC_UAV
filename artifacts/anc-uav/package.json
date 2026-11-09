@@ -13,7 +13,8 @@
     "test:references": "node scripts/test-references.cjs",
     "test:aircraft": "node --test scripts/test-aircraft.cjs",
     "test:community": "node --test scripts/test-community-aviation.cjs",
-    "test:profiles": "node --test scripts/test-profiles.cjs"
+    "test:profiles": "node --test scripts/test-profiles.cjs",
+    "test:map-tiles": "node --test scripts/test-map-tiles.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -60,6 +61,7 @@
     "zod-validation-error": "^5.0.0"
   },
   "dependencies": {
+    "@maplibre/maplibre-react-native": "^11.5.1",
     "expo-clipboard": "~58.0.4",
     "expo-document-picker": "~58.0.4",
     "expo-file-system": "~58.0.13",

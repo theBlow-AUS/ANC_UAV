@@ -9,8 +9,10 @@ import { OfflineMap } from '@/components/OfflineMap';
 import { NavigationPacks } from '@/components/NavigationPacks';
 import { NearbyPlaces } from '@/components/NearbyPlaces';
 import { FrequencyLookup } from '@/components/FrequencyLookup';
+import { OfflineTileManager } from '@/components/OfflineTileManager';
 import type { Coordinate } from '@/lib/geo';
 import { insideBounds } from '@/lib/navigation';
+import type { TileBounds, TileLayerId } from '@/lib/map-tiles';
 
 export default function MapMeasureScreen() {
   const colors = useColors();
@@ -26,6 +28,10 @@ export default function MapMeasureScreen() {
   const [positionError, setPositionError] = useState<string | null>(null);
   const [conversionValue, setConversionValue] = useState('');
   const [conversionUnit, setConversionUnit] = useState<'km' | 'nm'>('km');
+  const [mapLayer, setMapLayer] = useState<TileLayerId>('openfreemap');
+  const [satelliteDate, setSatelliteDate] = useState(() => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+  const [visibleBounds, setVisibleBounds] = useState<TileBounds | null>(null);
+  const [focusBounds, setFocusBounds] = useState<TileBounds | null>(null);
 
   const origin = useMemo(
     () => parseCoordinate(originLatitude, originLongitude),
@@ -117,19 +123,20 @@ export default function MapMeasureScreen() {
       title="Map"
       subtitle="Local maps · GPS · tap-to-measure"
     >
-      <Callout title="Reference map — not an aviation chart">
-        The bundled public-domain Australia overview is deliberately coarse. Zooming does not add detail. A partial openAIP area-frequency reference is bundled, but it is uncertified and not for primary navigation or flight planning. No authoritative chart or CTAF applicability coverage is bundled; absent data never means clear. All maps and calculations stay on this device.
+        <Callout title="Reference map — not an aviation chart">
+        OpenStreetMap, topographic and satellite layers contact their named public map hosts directly when online; downloads are saved locally. No map requests go through Replit. Preset region boundaries are approximate rectangles. The bundled airspace/frequency reference is separate, partial and not for primary navigation or flight planning. Missing data never means clear.
       </Callout>
 
       <Panel>
         <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{active.name}</Text>
-        <Badge tone="warning">{active.land.length ? 'OFFLINE REFERENCE MAP' : 'COORDINATE GRID — BASEMAP MISSING'}</Badge>
+        <Badge tone="warning">{mapLayer === 'openfreemap' ? 'OPENSTREETMAP · REFERENCE' : mapLayer === 'topographic' ? 'TOPOGRAPHIC · REFERENCE' : 'SATELLITE · DATED REFERENCE'}</Badge>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <ActionButton label="Tap sets A" secondary={tapTarget !== 'origin'} onPress={() => setTapTarget('origin')} testID="tap-origin-mode" />
           <ActionButton label="Tap sets B" secondary={tapTarget !== 'destination'} onPress={() => setTapTarget('destination')} testID="tap-destination-mode" />
         </View>
         <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Next tap sets {tapTarget === 'origin' ? 'origin A' : 'destination B'}. Select both points to measure, or use GPS for A.</Text>
         <OfflineMap key={`${active.id}-${active.provenance.retrievedAt}`} pack={active} origin={origin} destination={destination}
+          layer={mapLayer} satelliteDate={satelliteDate} onBoundsChange={setVisibleBounds} focusBounds={focusBounds}
           onSelect={p => {
             if (tapTarget === 'origin') { chooseOrigin(p); setTapTarget('destination'); }
             else chooseDestination(p);
@@ -137,6 +144,13 @@ export default function MapMeasureScreen() {
         {origin && !insideBounds(origin, active.bounds) ? <Text style={{ color: colors.destructive }}>Origin A is outside the displayed pack. Coordinate measurement still works; map coverage is unavailable there.</Text> : null}
         {destination && !insideBounds(destination, active.bounds) ? <Text style={{ color: colors.destructive }}>Destination B is outside the displayed map’s coverage.</Text> : null}
       </Panel>
+
+      <OfflineTileManager
+        layer={mapLayer} onLayerChange={setMapLayer}
+        satelliteDate={satelliteDate} onSatelliteDateChange={setSatelliteDate}
+        currentBounds={visibleBounds} initialBounds={active.bounds}
+        onFocusBounds={setFocusBounds}
+      />
 
       <SectionHeading title="Measurement origin" detail="Use device GPS or enter a WGS84 coordinate." />
       <Panel>

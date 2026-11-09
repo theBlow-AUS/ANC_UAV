@@ -6,11 +6,16 @@ import { useColors } from '../hooks/useColors';
 import type { Coordinate } from '../lib/geo';
 import { coordinateToMap, insideBounds, mapToCoordinate } from '../lib/navigation';
 import { ActionButton } from './FieldKit';
+import type { TileBounds, TileLayerId } from '../lib/map-tiles';
 
-type Props = { pack: NavigationPack; origin: Coordinate | null; destination: Coordinate | null; onSelect: (p: Coordinate) => void };
+type Props = {
+  pack: NavigationPack; origin: Coordinate | null; destination: Coordinate | null;
+  onSelect: (p: Coordinate) => void; layer?: TileLayerId; satelliteDate?: string;
+  onBoundsChange?: (bounds: TileBounds) => void; focusBounds?: TileBounds | null;
+};
 
 /** All geometry is local. Equirectangular reference map, no tile/network requests. */
-export function OfflineMap({ pack, origin, destination, onSelect }: Props) {
+export function OfflineMap({ pack, origin, destination, onSelect, onBoundsChange, layer = 'openfreemap' }: Props) {
   const colors = useColors();
   const [width, setWidth] = useState(320);
   const [bounds, setBounds] = useState<MapBounds>(pack.bounds);
@@ -65,6 +70,9 @@ export function OfflineMap({ pack, origin, destination, onSelect }: Props) {
     </View>
     <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
       {bounds.north.toFixed(4)}° N edge · {bounds.south.toFixed(4)}° S edge · {bounds.west.toFixed(4)}° to {bounds.east.toFixed(4)}°
+    </Text>
+    <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+      Browser preview: schematic reference only. The selected {layer === 'openfreemap' ? 'OpenStreetMap' : layer === 'topographic' ? 'topographic' : 'satellite'} layer renders in the iOS/Android native app.
     </Text>
     <View style={styles.row}>
       <ActionButton label="Zoom in" onPress={() => zoom(.5)} testID="map-zoom-in" secondary />

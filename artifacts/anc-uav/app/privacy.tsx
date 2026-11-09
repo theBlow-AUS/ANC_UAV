@@ -14,6 +14,10 @@ export default function PrivacyScreen() {
       body: 'Location permission is requested only after you ask to use device GPS. The returned coordinate is used locally for measurements and nearby frequency discovery; it is not written to the account vault or sent to a server.',
     },
     {
+      title: 'Offline map downloads',
+      body: 'The native map can request tiles directly from OpenFreeMap, Geoscience Australia and NASA EOSDIS GIBS. These providers receive the tile coordinates for map areas you view or download, which can reveal the approximate area, plus normal connection details such as your IP address. The app does not send your entered route coordinates or raw GPS fix to these map hosts. Offline packs are stored by MapLibre on the device. No map request is routed through Replit.',
+    },
+    {
       title: 'Public community airport data',
       body: 'A public-domain OurAirports Australian aerodrome/frequency snapshot is bundled for offline reference. Only the explicit update action in Comms requests a commit ID from api.github.com and two public CSV files from raw.githubusercontent.com. No requests occur on launch. No coordinates, search terms, credentials or incident notes are sent; the hosts can see ordinary connection details such as your IP address. Failed updates retain the prior snapshot. Community records have unknown effective dates and do not establish airspace applicability.',
     },

@@ -37,7 +37,8 @@
         {
           "locationWhenInUsePermission": "ANC UAV uses your location only when you ask it to measure from your current position."
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true,
