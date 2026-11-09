@@ -9,11 +9,11 @@ import { EMERGENCY } from '@/lib/ui-store';
 
 export default function AviateScreen() {
   const ui = useUi();
-  const { storageError, activePack } = useAppData();
+  const { storageError } = useAppData();
   const cols = ui.wide ? 4 : 2;
 
   return (
-    <Screen eyebrow={`Fly the aircraft first · ${activePack.name}`} title="Aviate">
+    <Screen eyebrow="Fly the aircraft first · UAV / RPAS" title="Aviate">
       <PriorityRail current="aviate" />
       <CallButton contact={EMERGENCY} />
       {storageError ? <Callout title="Local storage issue" tone="danger">{storageError}</Callout> : null}
