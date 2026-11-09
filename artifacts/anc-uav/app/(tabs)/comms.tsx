@@ -5,12 +5,16 @@ import { ActionButton, Badge, Callout, Hazard, Panel, Screen, SectionHeading } f
 import { PriorityRail } from '@/components/PriorityRail';
 import { RadioScripts } from '@/components/RadioScripts';
 import { FrequencyLookup } from '@/components/FrequencyLookup';
+import { CommunityFrequencies } from '@/components/CommunityFrequencies';
 import { NSW_FCTAF_REFERENCE, RFS_PACK_ID } from '@/data/rfs-pack';
 import { useAppData } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
+import { useNavigation } from '@/context/NavigationContext';
 
 export default function CommunicationsScreen() {
   const colors = useColors();
+  const { packs } = useNavigation();
+  const importedOtherRecords = packs.reduce((n, p) => n + p.frequencies.filter(f => f.service !== 'CTAF').length, 0);
   const { activePack, incidentFrequencies, removeIncidentFrequency } = useAppData();
   const isRfsPack = activePack.isBuiltIn && activePack.id === RFS_PACK_ID;
   const visibleAssignments = useMemo(
@@ -25,10 +29,11 @@ export default function CommunicationsScreen() {
       subtitle="Keep FCTAF, CTAF, and other ATS sources separate."
     >
       <Callout title="Verify before transmitting">
-        No authoritative aerodrome CTAF or airspace frequency dataset is installed. The supplied QRG scripts and NSW reference below are shown for review, not as an operating clearance.
+        Community airport frequency records (OurAirports, public domain) are installed but unverified, with unknown effective dates. No authoritative national airspace dataset is bundled; any imported spatial rules are listed separately below. The QRG scripts and NSW reference are shown for review, not as an operating clearance.
       </Callout>
 
       <PriorityRail current="comms" />
+      <ActionButton label="Airport frequency lookup" icon="radio" secondary onPress={() => router.push('/airport-frequencies')} />
       <SectionHeading title="Radio scripts" detail="Callsign is “Uncrewed RPA”. Report the aircraft’s position, not yours." />
       <RadioScripts />
       <Hazard title="Loss of tower comms">The mockup says: land immediately and use a mobile phone to contact the tower. Confirm the controlled procedure.</Hazard>
@@ -89,21 +94,16 @@ export default function CommunicationsScreen() {
         </Callout>
       )}
 
-      <SectionHeading title="Aerodrome CTAFs" detail="Normal CTAFs are not replaced by an FCTAF." />
-      <Panel>
-        <Badge tone="warning">DATASET NOT INSTALLED</Badge>
-        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          Automatic nearby aerodrome CTAF results need an approved aerodrome and frequency dataset with applicability coverage. A nearest-airport record alone is insufficient.
-        </Text>
-      </Panel>
-
+      <CommunityFrequencies />
       <FrequencyLookup />
 
       <SectionHeading title="Airspace / broadcast-area frequencies" />
       <Panel>
-        <Badge tone="warning">DATASET NOT INSTALLED</Badge>
+        <Badge tone="warning">{importedOtherRecords ? `${importedOtherRecords} IMPORTED ATS RECORDS · UNVERIFIED` : 'AIRSPACE / ATS SPATIAL DATA NOT IMPORTED'}</Badge>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          Geographic, altitude, time, and service conditions are not available in this first iteration. Other ATS frequencies will not be mislabeled as CTAFs.
+          {importedOtherRecords
+            ? 'Imported ATS records are evaluated in the applicability lookup, including their geometry, altitude, time and source conditions. They do not establish complete national coverage. Community airport records do not fill gaps in those rules.'
+            : 'The community CSV files do not provide airspace or broadcast-area applicability boundaries, altitude bands or operating schedules. No national coverage is claimed. Import a separately authorized spatial pack to evaluate those conditions.'}
         </Text>
       </Panel>
 

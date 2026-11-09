@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useNavigation } from '../context/NavigationContext';
@@ -6,22 +6,26 @@ import { useColors } from '../hooks/useColors';
 import { insideBounds, lookupFrequencies, parseQueryUtc } from '../lib/navigation';
 import { ActionButton, Badge, Callout, Panel, SectionHeading, TextField } from './FieldKit';
 import { SourceDetails } from './NavigationPacks';
+import { Pager } from './CommunityFrequencies';
+import { communityPage } from '../lib/community-aviation';
 
 export function FrequencyLookup() {
   const colors = useColors();
   const { packs, query, setQuery, ready, error, liveTime, setLiveTime, altitudeInput, setAltitudeInput } = useNavigation();
   const [expanded, setExpanded] = useState(false);
-  const rows = ready ? lookupFrequencies(packs, query) : [];
+  const [pages, setPages] = useState<Record<string, number>>({});
+  const rows = useMemo(() => ready ? lookupFrequencies(packs, query) : [], [ready, packs, query]);
   const candidates = rows.filter(r => r.state !== 'outside');
   const outside = rows.filter(r => r.state === 'outside');
+  const outsidePage = communityPage(outside, pages.outside ?? 0);
   const anyData = packs.some(p => p.coverage.frequencies !== 'absent');
   const labelStyle = { color: colors.mutedForeground, fontSize: 12, lineHeight: 18 };
   return <>
-    <SectionHeading title="CTAF / airspace lookup" detail="All installed records are evaluated; nearest aerodrome alone does not determine applicable frequencies." />
-    <Callout title={anyData ? 'Imported aviation data — verify independently' : 'Aviation frequency dataset NOT INSTALLED'}>
+    <SectionHeading title="Imported applicability lookup" detail="All installed records are evaluated; nearest aerodrome alone does not determine applicable frequencies." />
+    <Callout title={anyData ? 'Imported aviation data — verify independently' : 'No spatial applicability data imported'}>
       {(error ? 'Stored packs could not be loaded. ' : '') + (anyData
         ? 'Results match imported geometry, altitude and UTC rules only, not operational clearance. Completeness, temporary changes and NOTAMs are not verified.'
-        : 'No authoritative CTAF, airspace or broadcast-area dataset is bundled. No results does NOT mean clear airspace or no frequency requirement.') +
+        : 'Community airport references are bundled separately in Comms, but no imported airspace, broadcast-area or CTAF applicability geometry is available. This section cannot confirm which frequency applies at a position, altitude or time. No results does NOT mean clear airspace or no frequency requirement.') +
         ' Incident FCTAF is never inferred from GPS or these packs.'}
     </Callout>
     <Panel>
@@ -59,11 +63,14 @@ export function FrequencyLookup() {
     </Panel>)}
     {(['CTAF', 'other'] as const).map(group => {
       const records = candidates.filter(r => group === 'CTAF' ? r.frequency.service === 'CTAF' : r.frequency.service !== 'CTAF');
+      const pg = communityPage(records, pages[group] ?? 0);
       return <View key={group}>
         <SectionHeading title={group === 'CTAF' ? 'Aerodrome CTAFs' : 'Airspace / broadcast / ATS'} detail={`${records.length} matching or possible records · no frequency deduplication`} />
         {!records.length ? <Callout title="No candidate records">
-          {anyData ? 'No matching or possible records in these packs. Data may be incomplete, expired or outside coverage; do not treat this as no radio requirement.' : 'Dataset missing. Obtain a licensed, current aviation pack.'}
-        </Callout> : records.map(({ frequency: f, pack, state, reasons }) => <Panel key={`${pack.id}-${f.id}`}>
+          {anyData ? 'No matching or possible records in these packs. Data may be incomplete, expired or outside coverage; do not treat this as no radio requirement.' : 'No spatial applicability pack imported. Use the community airport reference in Comms for discovery only.'}
+        </Callout> : null}
+        <Pager label="Candidates" page={pg.page} pages={pg.pages} total={pg.total} onPage={p => setPages({ ...pages, [group]: p })} />
+        {pg.items.map(({ frequency: f, pack, state, reasons }) => <Panel key={`${pack.id}-${f.id}`}>
           <Badge tone="warning">{state === 'matches' ? 'MATCHES IMPORTED RULES — UNVERIFIED' : 'POSSIBLE — CHECK CONDITIONS'}</Badge>
           <Text style={{ color: colors.primary, fontSize: 23, fontWeight: '700' }}>{f.frequencyMHz} MHz · {f.service}</Text>
           <Text style={{ color: colors.foreground, fontWeight: '700' }}>{f.label}</Text>
@@ -82,7 +89,8 @@ export function FrequencyLookup() {
     })}
     {outside.length ? <Panel>
       <ActionButton label={`${expanded ? 'Hide' : 'Show'} ${outside.length} excluded records`} secondary onPress={() => setExpanded(!expanded)} />
-      {expanded ? outside.map(r => <Text key={`${r.pack.id}-${r.frequency.id}`} style={labelStyle}>
+      {expanded ? <Pager label="Excluded" page={outsidePage.page} pages={outsidePage.pages} total={outsidePage.total} onPage={p => setPages({ ...pages, outside: p })} /> : null}
+      {expanded ? outsidePage.items.map(r => <Text key={`${r.pack.id}-${r.frequency.id}`} style={labelStyle}>
         {r.frequency.label} · {r.frequency.service} {r.frequency.frequencyMHz} MHz · {r.pack.name}: {r.reasons.join('; ')}
       </Text>) : null}
     </Panel> : null}

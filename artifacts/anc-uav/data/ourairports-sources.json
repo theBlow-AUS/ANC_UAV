@@ -1,0 +1,8 @@
+{
+  "revision": "7dd521a50a421171db1cb69f87657a60b48561c7",
+  "retrievedAt": "2026-11-09T20:34:32.871Z",
+  "source": "https://ourairports.com/data/",
+  "licence": "Public domain",
+  "airportsCsvSha256": "1b46b6c1bd27d12c50ace581130faf7c69f7a2df5268dcb4ebaaa06d530d2d28",
+  "frequenciesCsvSha256": "b5d492ed75fbe4e8bc1881b8e28079fd06b59b9e5a2cfb07104095f7c1c22f12"
+}

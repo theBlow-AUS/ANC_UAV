@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:navigation": "node scripts/test-navigation.cjs",
     "test:references": "node scripts/test-references.cjs",
-    "test:aircraft": "node --test scripts/test-aircraft.cjs"
+    "test:aircraft": "node --test scripts/test-aircraft.cjs",
+    "test:community": "node --test scripts/test-community-aviation.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

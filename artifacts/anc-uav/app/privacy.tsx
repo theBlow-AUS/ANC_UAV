@@ -11,7 +11,11 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Location',
-      body: 'Location permission is requested only after you tap “Use current location”. The returned coordinate is used locally for measurement and is not written to the account vault or sent to a server.',
+      body: 'Location permission is requested only after you ask to use device GPS. The returned coordinate is used locally for measurements and nearby frequency discovery; it is not written to the account vault or sent to a server.',
+    },
+    {
+      title: 'Public community airport data',
+      body: 'A public-domain OurAirports Australian aerodrome/frequency snapshot is bundled for offline reference. Only the explicit update action in Comms requests a commit ID from api.github.com and two public CSV files from raw.githubusercontent.com. No requests occur on launch. No coordinates, search terms, credentials or incident notes are sent; the hosts can see ordinary connection details such as your IP address. Failed updates retain the prior snapshot. Community records have unknown effective dates and do not establish airspace applicability.',
     },
     {
       title: 'Credentials',

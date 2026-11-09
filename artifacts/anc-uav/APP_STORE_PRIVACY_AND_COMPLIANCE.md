@@ -20,10 +20,13 @@ The initial target is iPhone and iPad, in portrait and landscape. Android is a l
 | Existing NAIPS or Airservices account entry | Legacy local vault management only; new capture disabled | Existing password/credential in iOS Keychain or Android Keystore with device authentication; provider name only in app preferences |
 | Authorized local reference snapshots | Offline AIP PDF, NAIPS PDF/text, or historical camera image | Manifest provenance, declared issue/capture and effective dates, rights/use assertions and files in native app-local storage; not uploaded; assertions unverified |
 | CASA / myID credentials | Not collected | No input or sign-in flow is provided |
+| Community airport/frequency snapshot | Unverified nearby airport radio reference | Bundled locally; explicit update downloads public CSV data directly from GitHub, without location, searches or credentials |
 
 The app does not configure an ANC UAV backend, telemetry, advertising SDK, analytics SDK, or enabled provider download adapter. It does not call Replit services from the app’s product runtime. Direct acquisition is blocked after a provider-specific public-terms review on 9 November 2026: see `PROVIDER_PERMISSION_REVIEW.md`. No written agreements or supported licensed authentication/interface documentation were supplied. New credential capture is disabled for every provider. The Replit development preview workflow is separate tooling and is not part of the app’s runtime data path.
 
 Official provider-site links open the system browser only on an explicit user action and disclose the destination to that provider under its policies. The app cannot read the browser session and does not intercept sign-in. No credentials or provider downloads pass through Replit. No source URL in an imported manifest is fetched.
+
+The separate public-domain OurAirports reference has a user-triggered update action. It obtains a GitHub commit ID and downloads two CSVs from that commit directly to the device, with no request on launch, account/API key or Replit callback. The remote hosts see ordinary network connection details (including IP address), not coordinates, searches, incident notes or vault data. Failed updates retain the last working snapshot. This does not enable permission-gated Airservices/NAIPS/camera adapters. See `content-packs/COMMUNITY_AVIATION.md`.
 
 ### User controls
 
@@ -39,10 +42,10 @@ Snapshot files are ordinary app files, not protected vault credentials. They may
 
 ### Aviation data and operational limitations
 
-- The Quick Reference tab transcribes a user-supplied mockup and is visibly marked unverified.
+- The Quick Reference supporting screen transcribes a user-supplied mockup and is visibly marked unverified; it is not a dedicated tab.
 - The supplied January 2025 SOP PDF is not bundled. Its filename/internal revision difference must be resolved against a controlled copy.
 - The NSW 132.55 MHz FCTAF value is a scope-limited reference and requires current operational confirmation. Incident assignments are operator-entered and never inferred by GPS.
-- A public-domain Natural Earth Australia overview and selected localities are bundled for offline reference, not as aviation charts. Ordinary aerodrome CTAFs, geographic airspace/broadcast-area frequencies, AIP, NOTAM, NAIPS briefings and weather cameras are not bundled or automatically downloaded. Separately authorized navigation JSON packs can be imported into device-local storage, with provenance, coverage and unverified status shown. See `content-packs/NAVIGATION_PACKS.md` for licensing and applicability limits.
+- A public-domain Natural Earth Australia overview and selected localities are bundled for offline reference, not as aviation charts. A separate public-domain OurAirports snapshot includes Australian aerodromes and airport-associated radio records, including community-reported CTAFs. It is unverified, incomplete and has unknown effective dates; proximity does not establish applicability. Geographic airspace/broadcast-area datasets, AIP, NOTAM, NAIPS briefings and weather cameras are not bundled. Separately authorized navigation JSON packs can be imported with provenance, coverage and unverified status. See `content-packs/NAVIGATION_PACKS.md` and `content-packs/COMMUNITY_AVIATION.md`.
 - Coordinate measurements are mathematical results from the coordinates shown; they do not establish airspace applicability, radio-service selection, or flight clearance.
 - Imported rules and checklists remain unverified and read-only. A pack cannot promote itself to trusted status.
 - Local reference snapshots also remain unverified. Effective dates and source/capture times are operator-supplied declarations; an import timestamp is never substituted for them. Missing dates mean unknown currency; expired dates mean stale; future dates and references not yet effective are explicit. Even within declared dates, currentness is not independently verified.
@@ -50,7 +53,7 @@ Snapshot files are ordinary app files, not protected vault credentials. They may
 
 ### Pre-submission release gates
 
-1. Obtain written approval for every manual, quick reference, dataset, map layer, logo, and frequency record included or redistributed.
+1. Verify redistribution rights for every included manual, quick reference, dataset, map layer, logo and frequency source, retaining applicable licences/public-domain releases and obtaining written permission where required. Independently review operational content; a data licence is not aviation approval.
 2. Review the App Store Review Guidelines and complete the App Privacy questionnaire using the final app binary and actual third-party SDK inventory.
 3. Add the required public privacy policy and support URL, age/content ratings, accessibility information, and truthful product-page descriptions.
 4. Test iPhone and iPad layouts, portrait and landscape rotation, offline launch, storage exhaustion, interrupted imports, permission denial, Keychain/Keystore authentication, deletion, and backup/restore behavior.

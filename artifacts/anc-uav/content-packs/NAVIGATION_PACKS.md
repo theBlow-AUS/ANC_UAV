@@ -34,10 +34,18 @@ metadata cannot grant itself trusted/approved status. Do not redistribute
 provider data, build an automated scraping adapter, or label results approved
 without the corresponding data rights and aviation content review.
 
+A separate bundled **OurAirports community reference** now supplies Australian
+airport-associated frequencies under that publisher's public-domain release.
+These are point-associated records, not authoritative applicability rules or
+part of this navigation-pack contract. See `COMMUNITY_AVIATION.md` for the source,
+licence, update behavior and airspace coverage limitations.
+
 ## Runtime and storage
 
 Everything is computed locally. There is no map SDK, tile URL, API key,
-background download, Replit service or server request. On native devices the
+background download or Replit service. The separate community reference makes
+device-direct GitHub requests only on its explicit update action; this navigation
+import flow makes no server requests. On native devices the
 document picker reads a local JSON file and removes its temporary cache copy
 after parsing; the validated pack is saved to device-local AsyncStorage. Web
 preview uses the browser file picker and local storage, not native filesystem

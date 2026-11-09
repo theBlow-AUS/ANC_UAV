@@ -33,3 +33,16 @@ supplied. A recent import time does not establish an image's capture time.
 rights before designing sign-in or download requests. Local storage-rights
 assertions do not enable adapters. Keep issue/capture time separate from
 storage time and label saved camera images historical even just after import.
+
+Airport-associated community frequencies must remain distinct from spatial
+airspace/CTAF applicability, even when the data itself is freely redistributable.
+
+**Why:** OurAirports' public-domain release permits reuse, but its airport and
+frequency CSVs do not establish sector boundaries, altitude bands, tower hours,
+effective dates or national completeness. “Open” in a provider's name also does
+not imply unrestricted multi-operator commercial redistribution.
+
+**How to apply:** Show source records as unverified discovery references.
+Never invent service radii to fit an applicability contract, infer controlled
+status from airport type or treat retrieval time as an effective date. Review
+each additional source's actual intended-use terms independently.
