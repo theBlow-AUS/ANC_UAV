@@ -23,7 +23,11 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Provider accounts and permissions',
-      body: 'Keeping a credential on the device does not grant permission to automate access or redistribute provider material. NAIPS, Airservices and CASA integrations remain disabled pending provider terms, agency approval, and a reviewed sign-in design. Do not enter a myID password.',
+      body: 'Provider terms were checked on 9 November 2026. AIP storage/business use and NAIPS automation require written permission; weather-camera reuse permission has not been established. Direct downloads and all new credential capture remain blocked. CASA/myID and AVCRM are not connected. Official-site links open outside the app; the app cannot read their sign-in sessions.',
+    },
+    {
+      title: 'Reference snapshots',
+      body: 'On the native device you may import a local manifest and reference file you have rights to store. Metadata, declared source/effective dates and files stay in app-local storage, not the vault or a server. Replacements retain earlier versions; remove each version explicitly on Reference Snapshots. Dates, rights and sources are user-supplied and unverified. Images are always historical, never current weather. Ordinary files may be included in operating-system backups; device-only Keychain protections do not apply to reference files.',
     },
   ];
 

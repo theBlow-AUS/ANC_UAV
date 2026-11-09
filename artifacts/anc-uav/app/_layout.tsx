@@ -19,6 +19,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="checklists" />
       <Stack.Screen name="accounts" />
+      <Stack.Screen name="references" />
       <Stack.Screen name="add-assignment" />
       <Stack.Screen name="imported-document" />
       <Stack.Screen name="privacy" />

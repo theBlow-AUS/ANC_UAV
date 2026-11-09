@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import type { VaultProvider } from '../data/types';
 
 const KEY_PREFIX = 'anc-uav.account.v1.';
@@ -18,17 +19,16 @@ export async function saveProviderCredential(
   accountName: string,
   secret: string,
 ) {
-  if (!(await SecureStore.isAvailableAsync())) {
-    throw new Error('Secure device storage is unavailable on this device.');
-  }
-  await SecureStore.setItemAsync(
-    keyFor(provider),
-    JSON.stringify({ accountName, secret, savedAt: new Date().toISOString() }),
-    options,
-  );
+  // No supported, permission-reviewed authorization flow exists. Do not collect
+  // speculative passwords, including via callers outside the Accounts screen.
+  void provider;
+  void accountName;
+  void secret;
+  throw new Error('Credential capture is disabled until a provider-supported authorization flow and operator rights are approved. Never enter CASA/myID credentials.');
 }
 
 export async function testProviderUnlock(provider: VaultProvider) {
+  if (!(await isVaultAvailable())) throw new Error('Native device secure storage is unavailable.');
   const value = await SecureStore.getItemAsync(keyFor(provider), options);
   if (!value) throw new Error('No saved credential was found for this provider.');
   const parsed = JSON.parse(value) as { accountName?: string; secret?: string };
@@ -39,9 +39,10 @@ export async function testProviderUnlock(provider: VaultProvider) {
 }
 
 export async function deleteProviderCredential(provider: VaultProvider) {
+  if (!(await isVaultAvailable())) throw new Error('Native device secure storage is unavailable.');
   await SecureStore.deleteItemAsync(keyFor(provider), options);
 }
 
 export async function isVaultAvailable() {
-  return SecureStore.isAvailableAsync();
+  return Platform.OS !== 'web' && SecureStore.isAvailableAsync();
 }

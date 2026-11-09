@@ -19,3 +19,17 @@ reviewed permission for the intended use and an independent aviation content
 review. Keep missing coverage and unverified/currentness states visible.
 Recheck provider terms when considering an agreement; do not treat this note
 as permanent legal advice.
+
+NAIPS website automation must not be substituted for its licensed interface,
+and camera snapshots must never be presented as current weather.
+
+**Why:** The NAIPS acceptable-use terms checked on 2026-11-09 explicitly
+prohibit automated extraction/downloads without prior written authorization.
+Airservices separately describes a subscribed SOAP product with supplied
+interface documentation. No such agreement or camera-reuse permission was
+supplied. A recent import time does not establish an image's capture time.
+
+**How to apply:** Obtain the actual licensed interface and operator/agency
+rights before designing sign-in or download requests. Local storage-rights
+assertions do not enable adapters. Keep issue/capture time separate from
+storage time and label saved camera images historical even just after import.

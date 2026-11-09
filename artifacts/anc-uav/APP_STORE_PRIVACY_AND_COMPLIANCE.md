@@ -17,19 +17,25 @@ The initial target is iPhone and iPad, in portrait and landscape. Android is a l
 | Current location | Calculate a position measurement after the user taps the location action | Requested only while using the app; used locally and not sent to a server |
 | Coordinates, incident frequency notes, selected content pack | Local measurements and operator-entered references | App-local device storage; not sent to a server |
 | Imported PDF, Markdown, text, or JSON pack | Offline reference material | Copied to app-local device storage; not uploaded |
-| NAIPS or Airservices account entry | Optional future authorized use | Password/credential in iOS Keychain or Android Keystore with device authentication; provider name only in app preferences |
+| Existing NAIPS or Airservices account entry | Legacy local vault management only; new capture disabled | Existing password/credential in iOS Keychain or Android Keystore with device authentication; provider name only in app preferences |
+| Authorized local reference snapshots | Offline AIP PDF, NAIPS PDF/text, or historical camera image | Manifest provenance, declared issue/capture and effective dates, rights/use assertions and files in native app-local storage; not uploaded; assertions unverified |
 | CASA / myID credentials | Not collected | No input or sign-in flow is provided |
 
-The first iteration does not configure an ANC UAV backend, telemetry, advertising SDK, analytics SDK, or provider download adapter. It does not call Replit services from the app’s product runtime. The Replit development preview workflow is separate tooling and is not part of the app’s runtime data path.
+The app does not configure an ANC UAV backend, telemetry, advertising SDK, analytics SDK, or enabled provider download adapter. It does not call Replit services from the app’s product runtime. Direct acquisition is blocked after a provider-specific public-terms review on 9 November 2026: see `PROVIDER_PERMISSION_REVIEW.md`. No written agreements or supported licensed authentication/interface documentation were supplied. New credential capture is disabled for every provider. The Replit development preview workflow is separate tooling and is not part of the app’s runtime data path.
+
+Official provider-site links open the system browser only on an explicit user action and disclose the destination to that provider under its policies. The app cannot read the browser session and does not intercept sign-in. No credentials or provider downloads pass through Replit. No source URL in an imported manifest is fetched.
 
 ### User controls
 
 - Location permission is requested only after the user asks to use current location.
 - A user can remove imported documents from the local library.
 - A user can test device authentication for a saved vault entry or delete that entry.
+- A user can import a manifest plus authorized local reference file, view its declared source/effective timestamps, import a replacement while retaining prior versions, and delete individual versions. No automatic internet refresh occurs. The web preview cannot store reference snapshots or vault credentials.
 - No cloud recovery or developer-accessible credential copy exists in the product design.
 
 Before any release, verify Keychain and Keystore behavior on real supported devices, including reinstall and backup/restore cases. Do not promise that ordinary imported files or local preferences are excluded from operating-system backups unless that behavior has been explicitly configured and tested.
+
+Snapshot files are ordinary app files, not protected vault credentials. They may be included in OS backups. Do not import licensed/sensitive material whose terms prohibit that behavior until tested backup exclusion and required file protection are in place. Structural parser tests do not establish aviation accuracy or a secure full PDF/image parser. See `content-packs/REFERENCE_SNAPSHOTS.md` for limits and the manifest contract.
 
 ### Aviation data and operational limitations
 
@@ -39,6 +45,8 @@ Before any release, verify Keychain and Keystore behavior on real supported devi
 - A public-domain Natural Earth Australia overview and selected localities are bundled for offline reference, not as aviation charts. Ordinary aerodrome CTAFs, geographic airspace/broadcast-area frequencies, AIP, NOTAM, NAIPS briefings and weather cameras are not bundled or automatically downloaded. Separately authorized navigation JSON packs can be imported into device-local storage, with provenance, coverage and unverified status shown. See `content-packs/NAVIGATION_PACKS.md` for licensing and applicability limits.
 - Coordinate measurements are mathematical results from the coordinates shown; they do not establish airspace applicability, radio-service selection, or flight clearance.
 - Imported rules and checklists remain unverified and read-only. A pack cannot promote itself to trusted status.
+- Local reference snapshots also remain unverified. Effective dates and source/capture times are operator-supplied declarations; an import timestamp is never substituted for them. Missing dates mean unknown currency; expired dates mean stale; future dates and references not yet effective are explicit. Even within declared dates, currentness is not independently verified.
+- Weather-camera snapshots are labelled **HISTORICAL IMAGE — NOT CURRENT WEATHER** at all times, including immediately after import. They are not live weather observations. Missing local coverage is not a safe/clear result.
 
 ### Pre-submission release gates
 

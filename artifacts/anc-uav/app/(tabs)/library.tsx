@@ -226,9 +226,10 @@ export default function LibraryScreen() {
       <SectionHeading title="Credentials" />
       <Panel>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          The local secure vault uses the device’s protected storage. Provider access and automatic downloads are separate and remain disabled pending permission review.
+          Provider downloads and new credential capture are blocked after permission review. View each provider’s requirements, manage existing secure entries, or import authorized local snapshots.
         </Text>
-        <ActionButton label="Open secure vault" icon="lock" secondary onPress={() => router.push('/accounts')} />
+        <ActionButton label="Provider access & secure vault" icon="lock" secondary onPress={() => router.push('/accounts')} />
+        <ActionButton label="Reference snapshots & updates" icon="folder" secondary onPress={() => router.push('/references')} testID="library-reference-snapshots" />
       </Panel>
 
       <SectionHeading title="Privacy & App Store information" />
