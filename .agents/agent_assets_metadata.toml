@@ -1,0 +1,47 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "j8Ff92OsIeMdk9Lo7Pe71"
+uri = "file://.local/conversation-workspace/files/deliverables/rfs-rpas-ops-compliance-prd.md"
+type = "text"
+title = "ANC UAV — Product Requirements v0.8"
+description = "Named Aviate.Navigate.Communicate (ANC UAV); RFS/NSW content is the initial scope, with a separately gated agency-neutral import roadmap and 52 acceptance tests."
+logical_id = "dcbb0549-9030-4fb4-8bf5-905ff4834260"
+content_hash = "sha256:a783e88cbb5bf8c7202176585c6ee6de16a19d34539e88077cf3a8837a1c3390"
+size = 98593
+mtime_ms = 1794221780251
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/conversation:3229d65c-e748-4621-8a26-216375baae4b/dcbb0549-9030-4fb4-8bf5-905ff4834260/e96d48bd-3025-4922-9817-72259435c964"
+storage_version_token = "1794221830246575"
+content_type = "text/markdown"
+source_uri = "file://deliverables/rfs-rpas-ops-compliance-prd.md"
+
+[[outputs]]
+id = "q9Nh3gmNVCbb0jNygp0V-"
+uri = "file://.local/conversation-workspace/files/deliverables/offline-data-options-zero-replit.md"
+type = "text"
+title = "ANC UAV — Offline Data & Zero-Replit Options"
+description = "Updated for the confirmed project name, RFS-first content pack, and later local import of authorized agency manuals, rules, and policies."
+logical_id = "5ae3fa7e-8542-4343-a46a-ff98ff07e9d5"
+content_hash = "sha256:ad816932f75bb6549156b0e606f202236af0724beac7a94e9507c160235ad027"
+size = 26798
+mtime_ms = 1794221765427
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/conversation:3229d65c-e748-4621-8a26-216375baae4b/5ae3fa7e-8542-4343-a46a-ff98ff07e9d5/cd435527-053a-4151-a257-b5a5b66cd5fc"
+storage_version_token = "1794221832365960"
+content_type = "text/markdown"
+source_uri = "file://deliverables/offline-data-options-zero-replit.md"
+
+[[outputs]]
+id = "Ex0O_-8yeKw-prTzvfokD"
+uri = "file://.local/conversation-workspace/files/deliverables/rfs-rpas-first-build-checklist.md"
+type = "text"
+title = "ANC UAV — First-Build Checklist v0.3"
+description = "150 checks for the RFS-first iOS MVP plus a separate P2 agency-pack extension covering local imports, verification, licensing, and jurisdiction isolation."
+logical_id = "6462113d-90e5-4212-b857-8c753a615819"
+content_hash = "sha256:3ca28560588fddbf25d620fcdba2e955f8fb04743f89dc3047bae743cf6e214c"
+size = 33151
+mtime_ms = 1794221781427
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/conversation:3229d65c-e748-4621-8a26-216375baae4b/6462113d-90e5-4212-b857-8c753a615819/e1af9b57-ae62-475f-be68-bde81b96458a"
+storage_version_token = "1794221831410708"
+content_type = "text/markdown"
+source_uri = "file://deliverables/rfs-rpas-first-build-checklist.md"
