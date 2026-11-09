@@ -5,7 +5,7 @@ export const RFS_PACK_ID = 'au-nsw-rfs-rpas';
 export const RFS_PACK: AgencyContentPack = {
   id: RFS_PACK_ID,
   packId: RFS_PACK_ID,
-  name: 'NSW RFS UAV / RPAS',
+  name: 'Default RPAS/UAV',
   issuer: 'NSW Rural Fire Service',
   jurisdiction: { country: 'Australia', region: 'New South Wales' },
   version: 'Reference draft 0.1',
