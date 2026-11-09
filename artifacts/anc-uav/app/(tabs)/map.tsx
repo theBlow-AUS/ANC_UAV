@@ -1,17 +1,25 @@
 import * as Location from 'expo-location';
-import { Feather } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Text, View } from 'react-native';
 import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading, TextField } from '../../components/FieldKit';
 import { useColors } from '../../hooks/useColors';
 import { distanceKm, formatCoordinate, initialBearingDegrees, kmToNm, nmToKm, parseCoordinate } from '../../lib/geo';
+import { useNavigation } from '../../context/NavigationContext';
+import { OfflineMap } from '../../components/OfflineMap';
+import { NavigationPacks } from '../../components/NavigationPacks';
+import { NearbyPlaces } from '../../components/NearbyPlaces';
+import { FrequencyLookup } from '../../components/FrequencyLookup';
+import type { Coordinate } from '../../lib/geo';
+import { insideBounds } from '../../lib/navigation';
 
 export default function MapMeasureScreen() {
   const colors = useColors();
+  const { active, query, setQuery } = useNavigation();
+  const [tapTarget, setTapTarget] = useState<'origin' | 'destination'>('origin');
   const [permission, requestPermission] = Location.useForegroundPermissions();
-  const [gps, setGps] = useState<{ latitude: number; longitude: number; accuracy: number | null } | null>(null);
-  const [originLatitude, setOriginLatitude] = useState('');
-  const [originLongitude, setOriginLongitude] = useState('');
+  const [gps, setGps] = useState<{ latitude: number; longitude: number; accuracy: number | null; capturedAt: string } | null>(null);
+  const [originLatitude, setOriginLatitude] = useState(query.position ? formatCoordinate(query.position.latitude) : '');
+  const [originLongitude, setOriginLongitude] = useState(query.position ? formatCoordinate(query.position.longitude) : '');
   const [destinationName, setDestinationName] = useState('');
   const [destinationLatitude, setDestinationLatitude] = useState('');
   const [destinationLongitude, setDestinationLongitude] = useState('');
@@ -35,9 +43,32 @@ export default function MapMeasureScreen() {
         }
       : null;
 
+  function chooseOrigin(p: Coordinate) {
+    const latitude = formatCoordinate(p.latitude), longitude = formatCoordinate(p.longitude);
+    setGps(null);
+    setOriginLatitude(latitude); setOriginLongitude(longitude);
+    setQuery({ ...query, position: parseCoordinate(latitude, longitude) });
+  }
+  function chooseDestination(p: Coordinate, name = 'Map-selected point') {
+    setDestinationLatitude(formatCoordinate(p.latitude)); setDestinationLongitude(formatCoordinate(p.longitude));
+    setDestinationName(name);
+  }
+  function editOrigin(latitude: string, longitude: string) {
+    setGps(null); setOriginLatitude(latitude); setOriginLongitude(longitude);
+    setQuery({ ...query, position: parseCoordinate(latitude, longitude) });
+  }
+
   async function useCurrentLocation() {
     setPositionError(null);
     try {
+      if (Platform.OS === 'web') {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        });
+        const next = { latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date(position.timestamp).toISOString() };
+        chooseOrigin(next); setGps(next);
+        return;
+      }
       const currentPermission = permission?.granted ? permission : await requestPermission();
       if (!currentPermission.granted) {
         setPositionError(
@@ -54,10 +85,10 @@ export default function MapMeasureScreen() {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
+        capturedAt: new Date(position.timestamp).toISOString(),
       };
+      chooseOrigin(next);
       setGps(next);
-      setOriginLatitude(formatCoordinate(next.latitude));
-      setOriginLongitude(formatCoordinate(next.longitude));
     } catch {
       setPositionError('The device could not provide a position. Enter coordinates manually.');
     }
@@ -84,23 +115,27 @@ export default function MapMeasureScreen() {
     <Screen
       eyebrow="Offline position tools"
       title="Map & Measure"
-      subtitle="GPS or coordinate-to-coordinate measurement"
+      subtitle="Local maps · GPS · tap-to-measure"
     >
-      <Callout title="Offline basemap not installed">
-        The first iteration has no licensed aerodrome/locality dataset or offline map tiles. Map-tap selection and nearest-aerodrome lookup are unavailable until an approved pack is added. Do not treat missing data as an all-clear.
+      <Callout title="Reference map — not an aviation chart">
+        The bundled public-domain Australia overview is deliberately coarse. Zooming does not add detail. No authoritative aviation pack is bundled; absent data never means clear. All maps and calculations stay on this device.
       </Callout>
 
       <Panel>
-        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-          <Feather name="map" size={21} color={colors.primary} />
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>No map data installed</Text>
-            <Text style={{ fontSize: 12, lineHeight: 17, color: colors.mutedForeground }}>
-              This panel does not draw a basemap or fabricate a map pin.
-            </Text>
-          </View>
-          <Badge tone="warning">NO DATA</Badge>
+        <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: '700' }}>{active.name}</Text>
+        <Badge tone="warning">{active.land.length ? 'OFFLINE REFERENCE MAP' : 'COORDINATE GRID — BASEMAP MISSING'}</Badge>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <ActionButton label="Tap sets A" secondary={tapTarget !== 'origin'} onPress={() => setTapTarget('origin')} testID="tap-origin-mode" />
+          <ActionButton label="Tap sets B" secondary={tapTarget !== 'destination'} onPress={() => setTapTarget('destination')} testID="tap-destination-mode" />
         </View>
+        <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>Next tap sets {tapTarget === 'origin' ? 'origin A' : 'destination B'}. Select both points to measure, or use GPS for A.</Text>
+        <OfflineMap key={`${active.id}-${active.provenance.retrievedAt}`} pack={active} origin={origin} destination={destination}
+          onSelect={p => {
+            if (tapTarget === 'origin') { chooseOrigin(p); setTapTarget('destination'); }
+            else chooseDestination(p);
+          }} />
+        {origin && !insideBounds(origin, active.bounds) ? <Text style={{ color: colors.destructive }}>Origin A is outside the displayed pack. Coordinate measurement still works; map coverage is unavailable there.</Text> : null}
+        {destination && !insideBounds(destination, active.bounds) ? <Text style={{ color: colors.destructive }}>Destination B is outside the displayed map’s coverage.</Text> : null}
       </Panel>
 
       <SectionHeading title="Measurement origin" detail="Use device GPS or enter a WGS84 coordinate." />
@@ -112,6 +147,7 @@ export default function MapMeasureScreen() {
             </Text>
             <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
               {gps.accuracy === null ? 'Accuracy not reported' : `Reported accuracy ±${Math.round(gps.accuracy)} m`}
+              {' · '}{gps.capturedAt} · one-time fix, not live tracking
             </Text>
           </View>
         ) : (
@@ -134,13 +170,13 @@ export default function MapMeasureScreen() {
         <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>Origin coordinates</Text>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
-            <TextField label="Latitude" value={originLatitude} onChangeText={setOriginLatitude} placeholder="-33.8688" keyboardType="decimal-pad" testID="origin-latitude" />
+            <TextField label="Latitude" value={originLatitude} onChangeText={v => editOrigin(v, originLongitude)} placeholder="-33.8688" keyboardType="numbers-and-punctuation" testID="origin-latitude" />
           </View>
           <View style={{ flex: 1 }}>
-            <TextField label="Longitude" value={originLongitude} onChangeText={setOriginLongitude} placeholder="151.2093" keyboardType="decimal-pad" testID="origin-longitude" />
+            <TextField label="Longitude" value={originLongitude} onChangeText={v => editOrigin(originLatitude, v)} placeholder="151.2093" keyboardType="numbers-and-punctuation" testID="origin-longitude" />
           </View>
         </View>
-        <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Coordinates are user-entered unless a GPS fix is shown above.</Text>
+        <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Coordinates are manually entered or map-selected unless the GPS fix is shown above. Editing clears its GPS label.</Text>
       </Panel>
 
       <Panel>
@@ -148,10 +184,10 @@ export default function MapMeasureScreen() {
         <TextField label="Point name" value={destinationName} onChangeText={setDestinationName} placeholder="Aerodrome, locality, or landmark" testID="destination-name" />
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
-            <TextField label="Latitude" value={destinationLatitude} onChangeText={setDestinationLatitude} placeholder="-34.0000" keyboardType="decimal-pad" testID="destination-latitude" />
+            <TextField label="Latitude" value={destinationLatitude} onChangeText={setDestinationLatitude} placeholder="-34.0000" keyboardType="numbers-and-punctuation" testID="destination-latitude" />
           </View>
           <View style={{ flex: 1 }}>
-            <TextField label="Longitude" value={destinationLongitude} onChangeText={setDestinationLongitude} placeholder="151.0000" keyboardType="decimal-pad" testID="destination-longitude" />
+            <TextField label="Longitude" value={destinationLongitude} onChangeText={setDestinationLongitude} placeholder="151.0000" keyboardType="numbers-and-punctuation" testID="destination-longitude" />
           </View>
         </View>
       </Panel>
@@ -166,7 +202,7 @@ export default function MapMeasureScreen() {
             {kmToNm(measurement.kilometres).toFixed(2)} NM
           </Text>
           <Text style={{ fontSize: 14, color: colors.mutedForeground }}>
-            Initial true bearing: {measurement.bearing.toFixed(0)}°{destinationName ? ` to ${destinationName}` : ''}
+            Initial true bearing: {measurement.kilometres < 0.001 ? 'undefined (coincident points)' : `${measurement.bearing.toFixed(0)}°`}{destinationName ? ` to ${destinationName}` : ''}
           </Text>
           <Text style={{ fontSize: 12, lineHeight: 17, color: colors.mutedForeground }}>
             This is a straight-line geodesic calculation between the displayed coordinates. It does not establish airspace or radio-frequency applicability.
@@ -199,9 +235,9 @@ export default function MapMeasureScreen() {
         <Text style={{ fontSize: 17, fontWeight: '700', color: colors.primary }}>{converted}</Text>
       </Panel>
 
-      <Callout title="Nearest aerodrome / locality">
-        No verified offline reference dataset is installed. Add a licensed, current data pack before enabling automatic nearest-place results.
-      </Callout>
+      <NearbyPlaces onSelect={p => chooseDestination(p.position, p.name)} />
+      <FrequencyLookup />
+      <NavigationPacks />
     </Screen>
   );
 }

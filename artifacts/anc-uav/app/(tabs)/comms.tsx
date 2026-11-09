@@ -6,6 +6,7 @@ import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading, TextField 
 import { NSW_FCTAF_REFERENCE, RFS_PACK_ID } from '../../data/rfs-pack';
 import { useAppData } from '../../context/AppDataContext';
 import { useColors } from '../../hooks/useColors';
+import { FrequencyLookup } from '../../components/FrequencyLookup';
 
 export default function CommunicationsScreen() {
   const colors = useColors();
@@ -45,7 +46,7 @@ export default function CommunicationsScreen() {
       subtitle="Keep FCTAF, CTAF, and other ATS sources separate."
     >
       <Callout title="Verify before transmitting">
-        No authoritative aerodrome CTAF or airspace frequency dataset is installed. The supplied QRG scripts and NSW reference below are shown for review, not as an operating clearance.
+        Aerodrome CTAFs and airspace results below use only locally installed navigation packs. Missing, expired or unverified data is not an all-clear. The supplied QRG scripts and NSW reference are for review, not an operating clearance.
       </Callout>
 
       <SectionHeading title="Incident / sector FCTAF" detail="A received assignment is separate from a statewide reference." />
@@ -104,21 +105,7 @@ export default function CommunicationsScreen() {
         </Callout>
       )}
 
-      <SectionHeading title="Aerodrome CTAFs" detail="Normal CTAFs are not replaced by an FCTAF." />
-      <Panel>
-        <Badge tone="warning">DATASET NOT INSTALLED</Badge>
-        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          Automatic nearby aerodrome CTAF results need an approved aerodrome and frequency dataset with applicability coverage. A nearest-airport record alone is insufficient.
-        </Text>
-      </Panel>
-
-      <SectionHeading title="Airspace / broadcast-area frequencies" />
-      <Panel>
-        <Badge tone="warning">DATASET NOT INSTALLED</Badge>
-        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          Geographic, altitude, time, and service conditions are not available in this first iteration. Other ATS frequencies will not be mislabeled as CTAFs.
-        </Text>
-      </Panel>
+      <FrequencyLookup />
 
       <SectionHeading title="CTAF / blind-broadcast draft" detail="Template from the supplied unapproved mockup." />
       <Panel>

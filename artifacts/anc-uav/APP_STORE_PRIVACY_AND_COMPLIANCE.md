@@ -36,7 +36,7 @@ Before any release, verify Keychain and Keystore behavior on real supported devi
 - The Quick Reference tab transcribes a user-supplied mockup and is visibly marked unverified.
 - The supplied January 2025 SOP PDF is not bundled. Its filename/internal revision difference must be resolved against a controlled copy.
 - The NSW 132.55 MHz FCTAF value is a scope-limited reference and requires current operational confirmation. Incident assignments are operator-entered and never inferred by GPS.
-- Ordinary aerodrome CTAFs, geographic airspace CTAFs, AIP, NOTAM, NAIPS briefings, weather cameras, and a licensed offline basemap are not bundled or downloaded in this iteration.
+- A public-domain Natural Earth Australia overview and selected localities are bundled for offline reference, not as aviation charts. Ordinary aerodrome CTAFs, geographic airspace/broadcast-area frequencies, AIP, NOTAM, NAIPS briefings and weather cameras are not bundled or automatically downloaded. Separately authorized navigation JSON packs can be imported into device-local storage, with provenance, coverage and unverified status shown. See `content-packs/NAVIGATION_PACKS.md` for licensing and applicability limits.
 - Coordinate measurements are mathematical results from the coordinates shown; they do not establish airspace applicability, radio-service selection, or flight clearance.
 - Imported rules and checklists remain unverified and read-only. A pack cannot promote itself to trusted status.
 

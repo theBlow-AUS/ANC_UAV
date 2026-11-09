@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import {
   Pressable,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -36,7 +37,7 @@ export function Screen({
       contentContainerStyle={[
         styles.pageContent,
         {
-          paddingTop: insets.top + 12,
+          paddingTop: Platform.OS === 'web' ? Math.max(67, insets.top + 12) : insets.top + 12,
           paddingBottom: Math.max(28, insets.bottom + 112),
         },
       ]}

@@ -2,6 +2,9 @@ export type ContentState =
   | 'review-required'
   | 'user-imported-unverified';
 
+// Navigation packs have a separate versioned, runtime-validated contract.
+export type { NavigationPack, NavigationPlace, NavigationFrequency } from './navigation-pack';
+
 export type PackDocument = {
   id: string;
   title: string;
