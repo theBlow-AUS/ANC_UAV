@@ -82,7 +82,7 @@ export function Tile({ label, value, unit, note, hot = false }: { label: string;
     <View style={[s.panel, { backgroundColor: c.card, borderLeftColor: hot ? c.signal : c.ink }]}>
       <Notch />
       <Text style={{ color: c.mutedForeground, fontSize: ui.fs(15), fontWeight: '700' }}>{label}</Text>
-      <Text style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(58), lineHeight: ui.fs(58), textTransform: 'uppercase' }}>
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.3} style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(58), lineHeight: ui.fs(58), textTransform: 'uppercase' }}>
         {value}{unit ? <Text style={{ fontSize: ui.fs(24) }}> {unit}</Text> : null}
       </Text>
       {note ? <Text style={{ color: c.foreground, fontSize: ui.fs(14), fontWeight: '700' }}>{note}</Text> : null}

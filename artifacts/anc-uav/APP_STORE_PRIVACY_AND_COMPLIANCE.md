@@ -16,6 +16,7 @@ The initial target is iPhone and iPad, in portrait and landscape. Android is a l
 | --- | --- | --- |
 | Current location | Calculate a position measurement after the user taps the location action | Requested only while using the app; used locally and not sent to a server |
 | Coordinates, incident frequency notes, selected content pack | Local measurements and operator-entered references | App-local device storage; not sent to a server |
+| ReOC/operator labels, operating profile versions, reference limits and aircraft distances | Operator-configured offline reference sets | Ordinary app-local preferences, not the credential vault; not uploaded; may be included in operating-system backups |
 | Imported PDF, Markdown, text, or JSON pack | Offline reference material | Copied to app-local device storage; not uploaded |
 | Existing NAIPS or Airservices account entry | Legacy local vault management only; new capture disabled | Existing password/credential in iOS Keychain or Android Keystore with device authentication; provider name only in app preferences |
 | Authorized local reference snapshots | Offline AIP PDF, NAIPS PDF/text, or historical camera image | Manifest provenance, declared issue/capture and effective dates, rights/use assertions and files in native app-local storage; not uploaded; assertions unverified |
@@ -32,6 +33,7 @@ The separate public-domain OurAirports reference has a user-triggered update act
 
 - Location permission is requested only after the user asks to use current location.
 - A user can remove imported documents from the local library.
+- A user can create, edit, select and delete local operating profiles and versions in Settings. Profile values and ReOC/manual labels are unverified operator declarations, not authorisations. Deleting the active version clears selection without selecting a replacement. See `OPERATING_PROFILES.md`.
 - A user can test device authentication for a saved vault entry or delete that entry.
 - A user can import a manifest plus authorized local reference file, view its declared source/effective timestamps, import a replacement while retaining prior versions, and delete individual versions. No automatic internet refresh occurs. The web preview cannot store reference snapshots or vault credentials.
 - No cloud recovery or developer-accessible credential copy exists in the product design.

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { ActionButton, Badge, Callout, DISPLAY, Grid, Panel, Screen, SectionHeading, Seg, TextField } from '@/components/FieldKit';
-import { AircraftEditor } from '@/components/AircraftKit';
+import { ProfileManager } from '@/components/ProfileManager';
 import { CallButton } from '@/components/CallButton';
 import { PriorityRail } from '@/components/PriorityRail';
 import { useAppData } from '@/context/AppDataContext';
@@ -39,7 +39,7 @@ export default function SettingsScreen() {
           hint={number.trim() && !numberValid ? 'Use 3 to 15 digits, spaces and an optional leading +.' : undefined} />
         <ActionButton icon="plus" label="Add contact" onPress={add} disabled={!canAdd} testID="add-contact" />
       </Panel>
-      <AircraftEditor />
+      <ProfileManager />
     </View>
   );
 

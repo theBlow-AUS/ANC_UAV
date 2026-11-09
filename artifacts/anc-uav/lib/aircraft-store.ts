@@ -1,3 +1,5 @@
+// Legacy store retained for pre-profile regression fixtures; runtime configuration uses profile-store.
+// Do not import this module in app screens: its singleton writes the legacy key.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 import { AIRCRAFT_KEY, loadDoc, MAX_AIRCRAFT, newAircraftId, serialize, type Aircraft } from './aircraft';

@@ -26,6 +26,10 @@ export default function PrivacyScreen() {
       body: 'Imported documents and content packs stay in app storage. Text and operator-entered incident assignment notes are held in local app preferences. Use the Library removal control for imported files and the Secure Accounts screen to delete a saved credential.',
     },
     {
+      title: 'Operating profiles',
+      body: 'ReOC/operator labels, saved profile versions, manual notes, reference limits and aircraft distances stay in ordinary local preferences, not the encrypted credential vault. Manage and delete them in Settings. They are not uploaded and do not verify a ReOC or authorise an operation. Do not enter passwords here. Operating-system backups may include these settings; there is no cloud sync or profile recovery service.',
+    },
+    {
       title: 'Provider accounts and permissions',
       body: 'Provider terms were checked on 9 November 2026. AIP storage/business use and NAIPS automation require written permission; weather-camera reuse permission has not been established. Direct downloads and all new credential capture remain blocked. CASA/myID and AVCRM are not connected. Official-site links open outside the app; the app cannot read their sign-in sessions.',
     },

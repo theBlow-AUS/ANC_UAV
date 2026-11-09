@@ -11,7 +11,8 @@
     "test:navigation": "node scripts/test-navigation.cjs",
     "test:references": "node scripts/test-references.cjs",
     "test:aircraft": "node --test scripts/test-aircraft.cjs",
-    "test:community": "node --test scripts/test-community-aviation.cjs"
+    "test:community": "node --test scripts/test-community-aviation.cjs",
+    "test:profiles": "node --test scripts/test-profiles.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
