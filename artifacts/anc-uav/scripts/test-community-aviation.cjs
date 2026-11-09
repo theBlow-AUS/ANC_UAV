@@ -112,6 +112,21 @@ test('startup only reads cache, never network; valid prior snapshot works offlin
   assert.equal(await cache.refresh(), false); assert.equal(cache.get().snapshot.retrievedAt, saved.retrievedAt);
   assert.equal(kv.writes, 0);
 });
+test('first launch stays usable in airplane mode from bundled data without attempting a download', async () => {
+  const bundled = A.validateCommunitySnapshot(require('../data/ourairports-australia.json'));
+  const bundledFrequency = bundled.frequencies[0];
+  const bundledAirport = bundled.airports.find(a => a.id === bundledFrequency.airportId);
+  assert.ok(bundledAirport);
+  let calls = 0;
+  const cache = createCommunityCache(storage(), bundled, async () => { calls++; throw new Error('offline'); });
+  await cache.ready;
+  assert.equal(calls, 0);
+  assert.equal(cache.get().ready, true);
+  assert.equal(cache.get().usingBundled, true);
+  assert.equal(cache.get().snapshot.revision, bundled.revision);
+  const rows = A.searchCommunity(cache.get().snapshot, { origin: null, search: bundledAirport.ident, radiusKm: null, group: 'all' });
+  assert.ok(rows.some(r => r.frequency.id === bundledFrequency.id));
+});
 test('failed downloads, parse, malformed, incomplete and disk failures retain last working snapshot', async () => {
   const bundled = snapshot(), kv = storage(JSON.stringify(bundled));
   let next = () => Promise.reject(new Error('interrupted'));
@@ -127,6 +142,26 @@ test('failed downloads, parse, malformed, incomplete and disk failures retain la
   kv.failWrite = false; assert.equal(await cache.refresh(), true);
   const recovered = createCommunityCache(kv, bundled, async () => { throw new Error('offline'); }); await recovered.ready;
   assert.equal(recovered.get().snapshot.retrievedAt, '2026-11-10T01:00:00.000Z');
+});
+test('rate-limited GitHub update is reported as failed and preserves the committed snapshot across restart', async () => {
+  const bundled = snapshot();
+  const committed = { ...snapshot(), retrievedAt: '2026-11-10T00:00:00.000Z' };
+  const kv = storage(JSON.stringify(committed));
+  const cache = createCommunityCache(kv, bundled, async () => {
+    throw new Error('Public data request failed (429).');
+  });
+  await cache.ready;
+  const before = kv.value;
+  assert.equal(await cache.refresh(), false);
+  assert.equal(cache.get().busy, false);
+  assert.match(cache.get().error, /429/);
+  assert.match(cache.get().error, /Last working snapshot remains available/);
+  assert.equal(cache.get().snapshot.retrievedAt, committed.retrievedAt);
+  assert.equal(kv.value, before);
+  const restarted = createCommunityCache(kv, bundled, async () => { throw new Error('offline'); });
+  await restarted.ready;
+  assert.equal(restarted.get().snapshot.retrievedAt, committed.retrievedAt);
+  assert.equal(restarted.get().usingBundled, false);
 });
 test('unread saved data cannot be overwritten by refresh until reload recovers it', async () => {
   const kv = storage(JSON.stringify(snapshot())); kv.failRead = true;
