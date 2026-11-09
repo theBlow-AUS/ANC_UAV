@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Aviate.Navigate.Communicate (ANC UAV)",
+    "slug": "anc-uav",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/images/icon.png",
+    "scheme": "anc-uav",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ANC UAV uses your location only when you ask it to measure from your current position.",
+        "NSFaceIDUsageDescription": "ANC UAV uses device authentication to protect account entries in the local secure vault."
+      }
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "ANC UAV uses Face ID to protect account entries in the local secure vault."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ANC UAV uses your location only when you ask it to measure from your current position."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

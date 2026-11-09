@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "packId": "example-agency-field-reference",
+  "name": "Example agency reference pack",
+  "issuer": "Example agency — replace with the actual issuing body",
+  "jurisdiction": {
+    "country": "Australia",
+    "region": "Replace with the applicable state or territory"
+  },
+  "version": "0.1.0",
+  "sourceNote": "Example-only template. Replace with a controlled source and provenance.",
+  "rightsSummary": "Example only. The pack creator must confirm device storage, processing, and distribution rights.",
+  "documents": [
+    {
+      "id": "example-manual",
+      "title": "Example manual",
+      "source": "Example source document",
+      "version": "Draft",
+      "category": "manual",
+      "sections": [
+        {
+          "heading": "Replace this example",
+          "body": "This text is not an operational rule. Add attributed source text only when you have permission."
+        }
+      ]
+    }
+  ],
+  "rules": [],
+  "checklists": []
+}
