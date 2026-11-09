@@ -41,7 +41,7 @@ export function AircraftTiles({ aircraft, onOpenSettings }: { aircraft: Aircraft
                 <View key={a.id} accessible accessibilityLabel={`${a.name}, ${formatMetres(a.distanceM)} metres, operator-configured, unverified`}
                   style={{ flex: 1, minWidth: 0, backgroundColor: c.card, borderLeftWidth: 8, borderLeftColor: c.signal, padding: 12, gap: 4 }}>
                   <Text style={{ color: c.foreground, fontSize: ui.fs(16), fontWeight: '800' }}>{a.name}</Text>
-                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.25} style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: big, lineHeight: big * 1.05 }}>
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.25} style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: big, lineHeight: Math.ceil(big * 1.3), paddingTop: 2, paddingRight: 6, includeFontPadding: true }}>
                     {formatMetres(a.distanceM)}<Text style={{ fontSize: ui.fs(20) }}>{'\u00a0'}m</Text>
                   </Text>
                   {a.source ? <Text style={{ color: c.mutedForeground, fontSize: ui.fs(12), fontWeight: '700' }}>{a.source}</Text> : null}

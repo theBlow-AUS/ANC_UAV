@@ -29,7 +29,7 @@ export function Screen({ title, subtitle, eyebrow, back = false, children }: {
   return (
     <KeyboardAwareScrollViewCompat
       style={{ flex: 1, backgroundColor: c.background }}
-      contentContainerStyle={{ paddingTop: Platform.OS === 'web' ? Math.max(67, insets.top + 12) : insets.top + 12, paddingBottom: Platform.OS === 'web' ? 40 : Math.max(28, insets.bottom + 20), paddingHorizontal: ui.tablet ? 28 : 14, alignItems: 'center' }}
+      contentContainerStyle={{ paddingTop: Platform.OS === 'web' ? Math.max(67, insets.top + 12) : insets.top + 12, paddingBottom: Platform.OS === 'web' ? 40 : Math.max(28, insets.bottom + 12), paddingHorizontal: ui.tablet ? 28 : 14, alignItems: 'center' }}
       bottomOffset={24}
       keyboardShouldPersistTaps="handled"
     >
@@ -37,7 +37,7 @@ export function Screen({ title, subtitle, eyebrow, back = false, children }: {
         <View style={s.headingRow}>
           <View style={{ flex: 1, gap: 4 }}>
             {eyebrow ? <Text style={[s.eyebrow, { color: c.mutedForeground, fontSize: ui.fs(14) }]}>{eyebrow}</Text> : null}
-            <Text accessibilityRole="header" style={[s.title, { color: c.foreground, fontSize: ui.fs(ui.tablet ? 56 : 46), lineHeight: ui.fs(ui.tablet ? 56 : 46) }]}>{title}</Text>
+            <Text accessibilityRole="header" style={[s.title, { color: c.foreground, fontSize: ui.fs(ui.tablet ? 56 : 46), lineHeight: Math.ceil(ui.fs(ui.tablet ? 56 : 46) * 1.2) }]}>{title}</Text>
             {subtitle ? <Text style={{ color: c.mutedForeground, fontSize: ui.fs(16), fontWeight: '700' }}>{subtitle}</Text> : null}
           </View>
           {back ? (
@@ -82,7 +82,7 @@ export function Tile({ label, value, unit, note, hot = false }: { label: string;
     <View style={[s.panel, { backgroundColor: c.card, borderLeftColor: hot ? c.signal : c.ink }]}>
       <Notch />
       <Text style={{ color: c.mutedForeground, fontSize: ui.fs(15), fontWeight: '700' }}>{label}</Text>
-      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.3} style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(58), lineHeight: ui.fs(58), textTransform: 'uppercase' }}>
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.3} style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(58), lineHeight: Math.ceil(ui.fs(58) * 1.3), paddingTop: 2, paddingRight: 6, textTransform: 'uppercase' }}>
         {value}{unit ? <Text style={{ fontSize: ui.fs(24) }}> {unit}</Text> : null}
       </Text>
       {note ? <Text style={{ color: c.foreground, fontSize: ui.fs(14), fontWeight: '700' }}>{note}</Text> : null}
@@ -97,7 +97,7 @@ export function Verdict({ tone, glyph, title, text, children }: { tone: 'info' |
   const [bg, fg] = tone === 'stop' ? [c.destructive, c.destructiveForeground] : tone === 'warn' ? [c.signal, c.onSignal] : tone === 'go' ? [c.go, c.goForeground] : [c.card, c.foreground];
   return (
     <View accessibilityRole="alert" style={{ backgroundColor: bg, borderWidth: tone === 'info' ? 3 : 0, borderColor: c.ink, padding: 14, gap: 6, marginBottom: 12 }}>
-      <Text style={{ color: fg, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(38), lineHeight: ui.fs(38), textTransform: 'uppercase' }}>{glyph} {title}</Text>
+      <Text style={{ color: fg, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(38), lineHeight: Math.ceil(ui.fs(38) * 1.2), textTransform: 'uppercase' }}>{glyph} {title}</Text>
       <Text style={{ color: fg, fontSize: ui.fs(16), fontWeight: '700' }}>{text}</Text>
       {children}
     </View>
