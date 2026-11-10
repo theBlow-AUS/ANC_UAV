@@ -175,6 +175,24 @@ function cache() {
   return { version: 1, latitude: -33.946, longitude: 151.177, retrievedAt: '2026-11-10T04:00:00.000Z',
     payload: { latitude: -33.95, longitude: 151.18, utc_offset_seconds: 0, hourly_units: units, hourly } };
 }
+function hourlyTimes(start, count) {
+  const first = Date.parse(`${start}:00Z`);
+  return Array.from({ length: count }, (_, index) => new Date(first + index * 3600000).toISOString().slice(0, 16));
+}
+function canonicalForecastTimes(times) {
+  return times.map(time => `${time}:00.000Z`);
+}
+function cacheForHours(times, retrievedAt = `${times[0]}:00.000Z`) {
+  const fixture = cache();
+  fixture.retrievedAt = retrievedAt;
+  fixture.payload.hourly.time = times;
+  for (const key of Object.keys(fixture.payload.hourly)) {
+    if (key !== 'time') fixture.payload.hourly[key] = Array(times.length).fill(null);
+  }
+  fixture.payload.hourly.wind_speed_10m = times.map((_, index) => index + 1);
+  fixture.payload.hourly.wind_speed_80m = times.map((_, index) => index + 10);
+  return fixture;
+}
 test('weather parser distinguishes zero, missing values, units and forecast times', () => {
   const result = W.parseWeatherCache(cache());
   assert.equal(result.hours[0].wind_speed_10m, 0);
@@ -184,6 +202,69 @@ test('weather parser distinguishes zero, missing values, units and forecast time
   assert.equal(W.weatherHoursNow(result, Date.parse('2026-11-10T04:19Z')).length, 3);
   assert.equal(W.weatherHoursNow(result, Date.parse('2026-11-11T04:19Z')).length, 0);
   assert.match(W.weatherAge(result, Date.parse('2026-11-10T08:00Z')), /over 3 hours old/);
+});
+test('weather hour selection changes cleanly across UTC rollover and six-hour window boundaries', () => {
+  const times = hourlyTimes('2026-11-10T03', 10);
+  const snapshot = W.parseWeatherCache(cacheForHours(times));
+  const justBefore = Date.parse('2026-11-10T04:59:59.999Z');
+  const justAfter = Date.parse('2026-11-10T05:00:00.001Z');
+  assert.deepEqual(W.weatherHoursNow(snapshot, justBefore).map(hour => hour.time), canonicalForecastTimes(times.slice(1, 7)));
+  assert.deepEqual(W.weatherHoursNow(snapshot, justAfter).map(hour => hour.time), canonicalForecastTimes(times.slice(2, 8)));
+  assert.deepEqual(W.weatherHoursNow(snapshot, Date.parse('2026-11-10T05:00:00.000Z')).map(hour => hour.time), canonicalForecastTimes(times.slice(2, 8)));
+  assert.deepEqual(W.weatherHoursNow(snapshot, Date.parse('2026-11-10T10:59:59.999Z')).map(hour => hour.time), canonicalForecastTimes(times.slice(7, 10)));
+  assert.deepEqual(W.weatherHoursNow(snapshot, Date.parse('2026-11-10T11:00:00.000Z')).map(hour => hour.time), canonicalForecastTimes(times.slice(8)));
+  assert.ok(!W.weatherHoursNow(snapshot, justAfter).some(hour => Date.parse(hour.time) < Date.parse('2026-11-10T05:00:00Z')));
+});
+test('missing present-hour data never promotes a stale hour over available future hours', () => {
+  const times = ['2026-11-10T03:00', '2026-11-10T05:00', '2026-11-10T06:00'];
+  const snapshot = W.parseWeatherCache(cacheForHours(times));
+  const now = Date.parse('2026-11-10T04:30:00Z');
+  const available = W.weatherHoursNow(snapshot, now);
+  assert.deepEqual(available.map(hour => hour.time), canonicalForecastTimes(times.slice(1)));
+  assert.equal(available.find(hour => Date.parse(hour.time) <= now), undefined);
+  assert.ok(!available.some(hour => Date.parse(hour.time) < now));
+});
+test('weather age warning and future retrieval conflict honor exact clock boundaries', () => {
+  const snapshot = W.parseWeatherCache(cacheForHours(
+    hourlyTimes('2026-11-10T04', 2), '2026-11-10T04:00:00.000Z',
+  ));
+  assert.match(W.weatherAge(snapshot, Date.parse('2026-11-10T07:00:00.000Z')), /Retrieved 180 min ago/);
+  assert.equal(W.weatherAge(snapshot, Date.parse('2026-11-10T07:00:00.001Z')), 'Saved forecast is over 3 hours old');
+
+  const futureRetrieved = W.parseWeatherCache(cacheForHours(
+    hourlyTimes('2026-11-10T10', 2), '2026-11-10T10:00:00.000Z',
+  ));
+  assert.match(W.weatherAge(futureRetrieved, Date.parse('2026-11-10T09:55:00.000Z')), /Retrieved 0 min ago/);
+  assert.equal(W.weatherAge(futureRetrieved, Date.parse('2026-11-10T09:54:59.999Z')),
+    'Device clock / retrieval time conflict');
+});
+test('weather selection crosses UTC midnight without carrying yesterday into current', () => {
+  const times = hourlyTimes('2026-11-10T22', 9);
+  const snapshot = W.parseWeatherCache(cacheForHours(times));
+  const beforeMidnight = Date.parse('2026-11-10T23:59:59.999Z');
+  const afterMidnight = Date.parse('2026-11-11T00:00:00.001Z');
+  const before = W.weatherHoursNow(snapshot, beforeMidnight);
+  const after = W.weatherHoursNow(snapshot, afterMidnight);
+  assert.deepEqual(before.map(hour => hour.time), canonicalForecastTimes(times.slice(1, 7)));
+  assert.deepEqual(after.map(hour => hour.time), canonicalForecastTimes(times.slice(2, 8)));
+  assert.equal(before.find(hour => Date.parse(hour.time) <= beforeMidnight).time, '2026-11-10T23:00:00.000Z');
+  assert.equal(after.find(hour => Date.parse(hour.time) <= afterMidnight).time, '2026-11-11T00:00:00.000Z');
+  assert.ok(!after.some(hour => hour.time.startsWith('2026-11-10')));
+});
+test('missing 120 m wind stays unavailable instead of becoming zero or a lower-height value', () => {
+  const fixture = cacheForHours(hourlyTimes('2026-11-10T04', 2));
+  delete fixture.payload.hourly.wind_speed_120m;
+  delete fixture.payload.hourly.wind_direction_120m;
+  const snapshot = W.parseWeatherCache(fixture);
+  const [hour] = W.weatherHoursNow(snapshot, Date.parse('2026-11-10T04:30:00Z'));
+  assert.equal(hour.wind_speed_10m, 1);
+  assert.equal(hour.wind_speed_80m, 10);
+  assert.equal(hour.wind_speed_120m, null);
+  assert.equal(hour.wind_direction_120m, null);
+  assert.equal(W.windUnits(hour.wind_speed_120m), 'Not supplied');
+  assert.notEqual(hour.wind_speed_120m, 0);
+  assert.notEqual(hour.wind_speed_120m, hour.wind_speed_10m);
+  assert.notEqual(hour.wind_speed_120m, hour.wind_speed_80m);
 });
 test('missing height data is not inferred; invalid fields cannot become valid cached weather', () => {
   const missing = cache(); delete missing.payload.hourly.wind_speed_120m;
