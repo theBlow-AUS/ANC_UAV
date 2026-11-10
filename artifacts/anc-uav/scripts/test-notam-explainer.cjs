@@ -64,7 +64,7 @@ test('flags malformed date-times and altitude formats rather than guessing', () 
 test('surfaces unsupported sections, missing fields, and invalid input safely', () => {
   const result = explainNotam('This is not a standard NOTAM\nH) UNKNOWN DATA');
   assert.equal(result.items.length, 0);
-  assert.ok(result.warnings.some(w => w.includes('outside the supported A–G fields')));
+  assert.ok(result.warnings.some(w => w.includes('outside the supported Q) and A–G fields')));
   assert.ok(result.warnings.some(w => w.includes('No supported NOTAM fields')));
   assert.throws(() => explainNotam('   '), /Enter or paste/);
   assert.throws(() => explainNotam('x'.repeat(12_001)), /limited to 12,000/);
@@ -91,4 +91,29 @@ test('Comms explainer has no API, storage, analytics, or external-text path', ()
   const component = fs.readFileSync(path.join(__dirname, '../components/NotamExplainer.tsx'), 'utf8');
   assert.match(component, /explainNotam\(draft\)/);
   assert.doesNotMatch(component, /\bfetch\s*\(|XMLHttpRequest|AsyncStorage|SecureStore|api-client-react|analytics/i);
+});
+
+test('supports enclosing NOTAM parentheses without altering the original', () => {
+  const original = `(${sample})`;
+  const result = explainNotam(original);
+  assert.equal(result.original, original);
+  assert.equal(result.items[0].explanation, 'New NOTAM');
+  assert.equal(result.items.find(i => i.label === 'Upper limit (G)').interpreted, true);
+});
+
+test('ambiguous abbreviations remain unchanged and DLY means daily, not delay', () => {
+  const result = explainNotam('A1234/26 NOTAMN\nE) DLY APR FM ABCXYZ');
+  const explanation = result.items.find(i => i.label === 'Affected activity / condition (E)').explanation;
+  assert.equal(explanation, 'DLY (daily) APR FM ABCXYZ');
+});
+
+test('flight levels are not converted to true altitude and estimated times retain the qualifier', () => {
+  const result = explainNotam('A1234/26 NOTAMN\nB) 2601010000\nC) 2602010000 EST\nF) 500FT AGL\nG) FL150');
+  assert.match(result.items.find(i => i.label === 'End time (C)').explanation, /estimated/);
+  assert.match(result.items.find(i => i.label === 'Lower limit (F)').explanation, /above ground level/);
+  assert.match(result.items.find(i => i.label === 'Upper limit (G)').explanation, /Flight level 150.*not calculated/);
+});
+
+test('multiple notices cannot be silently merged into one explanation', () => {
+  assert.throws(() => explainNotam(`${sample}\n\n${sample.replace('A1234', 'A1235')}`), /one NOTAM at a time/);
 });

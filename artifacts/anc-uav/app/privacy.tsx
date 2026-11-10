@@ -31,7 +31,7 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Pasted NOTAM text',
-      body: 'The Comms reading aid interprets text locally on the device. The text is held only in temporary screen memory and is cleared when you leave Comms; it is not saved, uploaded, sent to an AI/model, or sent to a provider. The tool does not fetch or verify NOTAMs.',
+      body: 'The Comms reading aid interprets text locally on the device. Text is held only in temporary app memory; use Clear text to remove the draft and explanation. It is not saved, uploaded, sent to an AI/model, or sent to a provider. The tool does not fetch or verify NOTAMs.',
     },
     {
       title: 'Operating profiles',

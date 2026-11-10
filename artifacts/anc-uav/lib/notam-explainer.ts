@@ -18,13 +18,11 @@ const glossary: Record<string, string> = {
   'NOT AVBL': 'not available',
   'DUE TO': 'due to',
   AD: 'aerodrome',
-  APR: 'approach',
   AVBL: 'available',
   BTN: 'between',
   CLSD: 'closed',
   CTN: 'caution',
-  DLY: 'delay',
-  FM: 'from',
+  DLY: 'daily',
   OBST: 'obstacle',
   PERM: 'permanent',
   RWY: 'runway',
@@ -45,7 +43,7 @@ function escapeRegExp(value: string): string {
 }
 
 function dateTimeDescription(value: string, allowEstimated: boolean): string | null {
-  const match = value.match(allowEstimated ? /^(\d{10})(EST)?$/i : /^(\d{10})$/i);
+  const match = value.match(allowEstimated ? /^(\d{10})\s*(EST)?$/i : /^(\d{10})$/i);
   if (!match) return null;
   const digits = match[1];
   const yy = Number(digits.slice(0, 2));
@@ -89,7 +87,12 @@ export function explainNotam(input: string): NotamExplanation {
   if (!trimmed) throw new Error('Enter or paste NOTAM text first.');
   if (input.length > MAX_NOTAM_LENGTH) throw new Error(`NOTAM text is limited to ${MAX_NOTAM_LENGTH.toLocaleString()} characters.`);
 
-  const lines = trimmed.replace(/\r\n?/g, '\n').split('\n');
+  const parsingText = trimmed.startsWith('(') && trimmed.endsWith(')')
+    ? trimmed.slice(1, -1).trim() : trimmed;
+  const lines = parsingText.replace(/\r\n?/g, '\n').split('\n');
+  if (lines.filter(line => /^\s*\(?[A-Z]\d{1,4}\/\d{2}\s+NOTAM[NRC]\b/i.test(line)).length > 1) {
+    throw new Error('Paste one NOTAM at a time. Multiple notices are not combined or compared.');
+  }
   const header = lines[0]?.trim() ?? '';
   const headerMatch = header.match(/^([A-Z]\d{1,4}\/\d{2})\s+NOTAM([NRC])(?:\s+([A-Z]\d{1,4}\/\d{2}))?$/i);
   const fields = new Map<string, string[]>();
@@ -110,7 +113,7 @@ export function explainNotam(input: string): NotamExplanation {
     if (/^[A-Z]\)\s*/i.test(line)) {
       currentField = null;
       unparsed.push(line);
-      warnings.push(`Section “${line.slice(0, 2)}” is outside the supported A–G fields and was not interpreted.`);
+      warnings.push(`Section “${line.slice(0, 2)}” is outside the supported Q) and A–G fields and was not interpreted.`);
       continue;
     }
     if (currentField) {
@@ -194,7 +197,7 @@ export function explainNotam(input: string): NotamExplanation {
   for (const [field, label] of [['F', 'Lower limit (F)'], ['G', 'Upper limit (G)']] as const) {
     const value = fields.get(field)?.join('\n').trim();
     if (!value) continue;
-    const description = altitudeDescription(value);
+    const description = field === 'F' && /^UNL$/i.test(value) ? null : altitudeDescription(value);
     items.push({
       label,
       value,
@@ -205,7 +208,7 @@ export function explainNotam(input: string): NotamExplanation {
   }
 
   for (const field of ['A', 'B', 'C', 'E']) {
-    if (!fields.has(field)) warnings.push(`Section ${field}) is absent; no value was inferred.`);
+    if (!fields.get(field)?.join('').trim()) warnings.push(`Section ${field}) is absent or empty; no value was inferred.`);
   }
   if (!fields.has('Q')) warnings.push('No Q) line was found; coded qualifiers are unavailable.');
   if (unparsed.length) warnings.push(`${unparsed.length} other line${unparsed.length === 1 ? '' : 's'} could not be assigned to a supported section; review the original.`);

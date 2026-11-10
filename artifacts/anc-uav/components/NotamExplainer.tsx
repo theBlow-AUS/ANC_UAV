@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
 import { ActionButton, Badge, Callout, Panel, SectionHeading, TextField } from './FieldKit';
 import { useColors } from '../hooks/useColors';
 import { explainNotam, type NotamExplanation } from '../lib/notam-explainer';
@@ -12,12 +11,6 @@ export function NotamExplainer() {
   const [draft, setDraft] = useState('');
   const [result, setResult] = useState<NotamExplanation | null>(null);
   const [error, setError] = useState('');
-
-  useFocusEffect(useCallback(() => () => {
-    setDraft('');
-    setResult(null);
-    setError('');
-  }, []));
 
   function explain() {
     try {
@@ -43,7 +36,7 @@ export function NotamExplainer() {
       </Callout>
       <TextField
         label="NOTAM text"
-        hint="Text stays in temporary device memory and is not saved. Changing tabs clears it. Maximum 12,000 characters."
+        hint="Text stays in temporary app memory and is not saved. Use Clear text to remove it. Maximum 12,000 characters."
         value={draft}
         onChangeText={updateDraft}
         placeholder={'Paste a NOTAM, including its Q), A), B), C) and E) sections'}
@@ -62,6 +55,8 @@ export function NotamExplainer() {
         disabled={!draft.trim()}
         testID="notam-explain"
       />
+      <ActionButton label="Clear text" icon="x" secondary onPress={() => updateDraft('')}
+        disabled={!draft} testID="notam-clear" />
       {error ? <Callout title="Could not explain this text" tone="danger">{error}</Callout> : null}
       {result ? (
         <View accessibilityLiveRegion="polite" testID="notam-result">

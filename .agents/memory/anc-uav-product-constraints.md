@@ -39,6 +39,12 @@ The user requires incident FCTAF plus statewide references, normal aerodrome CTA
 
 **How to apply:** Missing aviation/map data must be shown as missing, not as a clear or safe result. Never infer an incident-assigned FCTAF from location.
 
+The NOTAM-to-plain-English tool belongs in Comms and must run entirely on the device.
+
+**Why:** The user explicitly requested on-device conversion in the Comms section.
+
+**How to apply:** Keep pasted text and interpretation local; do not introduce a remote model or server dependency for the converter.
+
 Aircraft distances must be user-configurable from their own operations manuals. The user specified Mini, M30T and combined Matrice 4/5T defaults, with 800 m for Matrice 4/5T, and aircraft-row caps of four on phones and six on tablets. General reference figures and aircraft distances must be saved together in custom operating profiles, including VLOS/EVLOS/BVLOS labels, with multiple versions depending on the covering ReOC.
 
 **Why:** The user supplied these product requirements; the 800 m figure is their requested default, not independently verified manufacturer or regulatory guidance.
