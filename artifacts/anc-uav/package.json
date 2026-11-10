@@ -15,7 +15,8 @@
     "test:aircraft": "node --test scripts/test-aircraft.cjs",
     "test:community": "node --test scripts/test-community-aviation.cjs",
     "test:profiles": "node --test scripts/test-profiles.cjs",
-    "test:map-tiles": "node --test scripts/test-map-tiles.cjs"
+    "test:map-tiles": "node --test scripts/test-map-tiles.cjs",
+    "test:notam": "node --test scripts/test-notam-explainer.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

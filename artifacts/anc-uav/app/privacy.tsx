@@ -30,6 +30,10 @@ export default function PrivacyScreen() {
       body: 'Imported documents and content packs stay in app storage. Text and operator-entered incident assignment notes are held in local app preferences. Use the Library removal control for imported files.',
     },
     {
+      title: 'Pasted NOTAM text',
+      body: 'The Comms reading aid interprets text locally on the device. The text is held only in temporary screen memory and is cleared when you leave Comms; it is not saved, uploaded, sent to an AI/model, or sent to a provider. The tool does not fetch or verify NOTAMs.',
+    },
+    {
       title: 'Operating profiles',
       body: 'ReOC/operator labels, saved profile versions, manual notes, reference limits and aircraft distances stay in ordinary local preferences, not the encrypted credential vault. Manage and delete them in Settings. They are not uploaded and do not verify a ReOC or authorise an operation. Do not enter passwords here. Operating-system backups may include these settings; there is no cloud sync or profile recovery service.',
     },

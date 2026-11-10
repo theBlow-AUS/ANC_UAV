@@ -6,6 +6,7 @@ import { PriorityRail } from '@/components/PriorityRail';
 import { RadioScripts } from '@/components/RadioScripts';
 import { FrequencyLookup } from '@/components/FrequencyLookup';
 import { CommunityFrequencies } from '@/components/CommunityFrequencies';
+import { NotamExplainer } from '@/components/NotamExplainer';
 import { NSW_FCTAF_REFERENCE, RFS_PACK_ID } from '@/data/rfs-pack';
 import { useAppData } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
@@ -34,6 +35,7 @@ export default function CommunicationsScreen() {
 
       <PriorityRail current="comms" />
       <ActionButton label="Airport frequency lookup" icon="radio" secondary onPress={() => router.push('/airport-frequencies')} />
+      <NotamExplainer />
       <SectionHeading title="Radio scripts" detail="Callsign is “Uncrewed RPA”. Report the aircraft’s position, not yours." />
       <RadioScripts />
       <Hazard title="Loss of tower comms">The mockup says: land immediately and use a mobile phone to contact the tower. Confirm the controlled procedure.</Hazard>
