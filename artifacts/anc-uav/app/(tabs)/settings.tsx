@@ -9,7 +9,7 @@ import { PriorityRail } from '@/components/PriorityRail';
 import { useAppData } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
 import { useUi } from '@/hooks/useUi';
-import { cleanDialString, setUi } from '@/lib/ui-store';
+import { cleanDialString, isEmergencyDialString, setUi } from '@/lib/ui-store';
 
 export default function SettingsScreen() {
   const c = useColors();
@@ -17,7 +17,8 @@ export default function SettingsScreen() {
   const { activePack, packs, localDocuments, incidentFrequencies, storageError } = useAppData();
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
-  const numberValid = cleanDialString(number) !== null;
+  const numberValid = cleanDialString(number) !== null && !isEmergencyDialString(number);
+  const emergencyNumber = number.trim().length > 0 && isEmergencyDialString(number);
   const canAdd = name.trim().length > 0 && numberValid && ui.hydrated;
 
   const add = () => {
@@ -29,15 +30,15 @@ export default function SettingsScreen() {
 
   const contacts = (
     <View>
-      <Accordion title="Contacts" icon="phone" testID="acc-contacts" defaultOpen summary={`${ui.contacts.filter(k => k.id !== '000').length} custom contacts · saved on this device`}>
-      {ui.contacts.filter(k => k.id !== '000').map((k) => (
+      <Accordion title="Contacts" icon="phone" testID="acc-contacts" defaultOpen summary={`${ui.contacts.length} operational contacts · saved on this device`}>
+      {ui.contacts.map((k) => (
         <CallButton key={k.id} contact={k}
-          onRemove={k.id === '000' ? undefined : () => setUi({ contacts: ui.contacts.filter((x) => x.id !== k.id) })} />
+          onRemove={() => setUi({ contacts: ui.contacts.filter((x) => x.id !== k.id) })} />
       ))}
       <Panel>
         <TextField label="Contact name" value={name} onChangeText={setName} placeholder="Air desk, base, observer" testID="contact-name" maxLength={60} />
         <TextField label="Phone number" value={number} onChangeText={setNumber} keyboardType="phone-pad" placeholder="Digits, spaces, optional +" testID="contact-number" maxLength={24}
-          hint={number.trim() && !numberValid ? 'Use 3 to 15 digits, spaces and an optional leading +.' : undefined} />
+          hint={emergencyNumber ? 'ANC UAV cannot dial 000. Use your device’s native emergency-calling feature.' : number.trim() && !numberValid ? 'Use 3 to 15 digits, spaces and an optional leading +.' : undefined} />
         <ActionButton icon="plus" label="Add contact" onPress={add} disabled={!canAdd} testID="add-contact" />
       </Panel>
       </Accordion>
@@ -80,7 +81,9 @@ export default function SettingsScreen() {
       <PriorityRail current="admin" />
       {ui.storageError ? <Callout title="Preferences storage" tone="danger">{ui.storageError}</Callout> : null}
       {storageError ? <Callout title="App data storage" tone="danger">{storageError}</Callout> : null}
-      {ui.contacts.filter(k => k.id === '000').map(k => <CallButton key={k.id} contact={k} />)}
+      <Callout title="Emergency calls">
+        ANC UAV does not place emergency calls. Use your device’s native emergency-calling feature; saved contacts are for operational calls only.
+      </Callout>
       <Grid cols={ui.wide ? 2 : 1} gap={20}>{[contacts, prefs]}</Grid>
     </Screen>
   );

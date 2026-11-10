@@ -23,10 +23,18 @@ function harness(file, overrides = {}) {
     return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }];
   };
   const mocks = {
-    react: { useState: state, useRef: initial => state(() => ({ current: initial }))[0] },
+    react: { useState: state, useRef: initial => state(() => ({ current: initial }))[0], useEffect() {} },
     'react-native': { Text: 'Text', View: 'View', Pressable: 'Pressable', Platform: { OS: 'ios' }, Linking: { openSettings: async () => {} } },
     '@expo/vector-icons': { Feather: 'Feather' },
-    'expo-router': { router: { navigate() {} } },
+    'expo-router': { router: { navigate() {}, setParams() {} }, useLocalSearchParams: () => ({}) },
+    '@/components/FieldKit': { ...fields, DISPLAY: 'Test' },
+    '@/hooks/useColors': { useColors: () => ({ foreground: 'black', mutedForeground: 'gray', card: 'white', signal: 'yellow', ink: 'black', onSignal: 'black', destructive: 'red' }) },
+    '@/hooks/useUi': { useUi: () => ({ fs: n => n, unit: 'km', crew: 'multi', text: 1 }) },
+    '@/lib/ui-store': {
+      setUi() {},
+      cleanDialString: v => /^\+?[0-9 ]+$/.test(v.trim()) && v.trim().replace(/\s/g, '').replace('+', '').length >= 3 ? v.trim().replace(/\s/g, '') : null,
+      isEmergencyDialString: v => v.trim().replace(/\s/g, '').replace('+', '') === '000',
+    },
     'expo-location': { useForegroundPermissions: () => [{ granted: true }, async () => ({ granted: true })],
       Accuracy: { High: 'high' }, getCurrentPositionAsync: async () => ({ coords: { latitude: -33, longitude: 151, accuracy: 5 }, timestamp: 1000 }) },
     './FieldKit': { ...fields, DISPLAY: 'Test' },
@@ -143,5 +151,93 @@ test('map taps, GPS and measurement output remain outside disclosures; incident 
   assert.match(map, /Initial true bearing/);
   assert.ok(comms.indexOf('Loss of tower comms') < comms.indexOf('<Accordion'));
   assert.match(comms, /summary=.*visibleAssignments/s);
-  assert.match(read('app/(tabs)/settings.tsx'), /ui\.contacts\.filter\(k => k\.id === '000'\)\.map/);
+  assert.match(read('app/(tabs)/settings.tsx'), /ANC UAV does not place emergency calls/);
+});
+
+test('first Multi-Crew COM rail button selects crew-message view on Aviate; second still opens Comms', () => {
+  const navigations = [], ui = { crew: 'multi' };
+  const h = harness('components/PriorityRail.tsx', {
+    'expo-router': { router: { navigate: route => navigations.push(route) } },
+    '@/hooks/useUi': { useUi: () => ({ crew: ui.crew }) },
+    '@/lib/ui-store': { setUi: patch => Object.assign(ui, patch) },
+  });
+  let tree = h.render(h.exports.PriorityRail, { current: 'aviate' });
+  const steps = all(tree, n => n.type === 'Pressable' && /^Step \d:/.test(n.props.accessibilityLabel));
+  assert.equal(steps.length, 5);
+  tree = h.render(h.exports.PriorityRail, { current: 'comms' });
+  const commsSteps = all(tree, n => n.type === 'Pressable' && /^Step \d:/.test(n.props.accessibilityLabel));
+  assert.deepEqual(commsSteps.map(n => n.props.style.backgroundColor), ['white', 'white', 'white', 'yellow', 'white']);
+  tree = h.render(h.exports.PriorityRail, { current: 'aviate' });
+  const aviateSteps = all(tree, n => n.type === 'Pressable' && /^Step \d:/.test(n.props.accessibilityLabel));
+  assert.deepEqual(aviateSteps.map(n => n.props.style.backgroundColor), ['white', 'yellow', 'white', 'white', 'white']);
+  steps.splice(0, steps.length, ...aviateSteps);
+  steps[0].props.onPress();
+  assert.deepEqual(navigations[0], { pathname: '/', params: { internalComms: '1' } });
+  steps[3].props.onPress();
+  assert.equal(navigations[1], '/comms');
+  assert.match(read('app/(tabs)/index.tsx'), /Communicate internally, with your crew, constantly\./);
+  assert.doesNotMatch(read('app/(tabs)/index.tsx'), /CallButton|EMERGENCY/);
+});
+
+test('crew-message route shows the banner on Aviate while leaving its aircraft content in place', () => {
+  const h = harness('app/(tabs)/index.tsx', {
+    'expo-router': { router: { navigate() {}, setParams() {} }, useLocalSearchParams: () => ({ internalComms: '1' }) },
+    '@/hooks/useUi': { useUi: () => ({ crew: 'multi', fs: n => n }) },
+    '@/components/ActiveProfile': { ActiveProfile: 'ActiveProfile' },
+    '@/components/PriorityRail': { PriorityRail: 'PriorityRail' },
+    '@/components/UavWeather': { UavWeather: 'UavWeather' },
+    '@/context/AppDataContext': { useAppData: () => ({ storageError: null }) },
+  });
+  const tree = h.render(h.exports.default);
+  assert.ok(all(tree, n => n.type === 'Text' && text(n).includes('Communicate internally, with your crew, constantly.')).length);
+  assert.ok(all(tree, n => n.type === 'ActiveProfile').length);
+  assert.ok(all(tree, n => n.type === 'UavWeather').length);
+  const rail = all(tree, n => n.type === 'PriorityRail')[0];
+  assert.equal(rail.props.selectedIndex, 0);
+});
+
+test('an emergency-number contact cannot invoke the phone link even if passed directly', () => {
+  const calls = [], h = harness('components/CallButton.tsx', {
+    'react-native': { Text: 'Text', View: 'View', Pressable: 'Pressable', Linking: { openURL: async url => calls.push(url) } },
+    '@/lib/ui-store': {
+      cleanDialString: v => /^\+?[0-9 ]+$/.test(v.trim()) && v.trim().replace(/\s/g, '').replace('+', '').length >= 3 ? v.trim().replace(/\s/g, '') : null,
+      isEmergencyDialString: v => v.trim().replace(/\s/g, '').replace('+', '') === '000',
+    },
+  });
+  const props = { contact: { id: 'legacy', name: 'Emergency services', number: '000' } };
+  let tree = h.render(h.exports.CallButton, props);
+  field(tree, 'call-legacy').props.onPress();
+  tree = h.render(h.exports.CallButton, props);
+  all(tree, n => n.type === 'Pressable')[0].props.onPress();
+  tree = h.render(h.exports.CallButton, props);
+  assert.deepEqual(calls, []);
+  assert.match(text(tree), /ANC UAV does not place emergency calls/);
+});
+
+test('legacy 000 contacts are removed on load and cannot be reintroduced into saved preferences', async () => {
+  let saved = JSON.stringify({ contacts: [
+    { id: '000', name: 'Emergency services', number: '000' },
+    { id: '000', name: 'Old emergency entry', number: '0400123456' },
+    { id: 'legacy-label', name: 'Emergency services', number: '00 0' },
+    { id: 'ops', name: 'Operations', number: '123456' },
+  ] });
+  let written = '';
+  const storage = { getItem: async () => saved, setItem: async (_key, value) => { written = value; } };
+  const mod = { exports: {} };
+  const output = ts.transpileModule(read('lib/ui-store.ts'), { compilerOptions: {
+    module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022,
+  } }).outputText;
+  new Function('require', 'module', 'exports', output)((name) => name === '@react-native-async-storage/async-storage'
+    ? storage : name === 'react' ? { useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot() } : require(name), mod, mod.exports);
+  await new Promise(setImmediate);
+  assert.deepEqual(mod.exports.useUiStore().contacts.map(c => c.id), ['ops']);
+  assert.equal(mod.exports.isEmergencyDialString('00 0'), true);
+  mod.exports.setUi({ contacts: [
+    { id: 'new-emergency', name: 'Emergency', number: '000' },
+    { id: 'new-ops', name: 'Ops', number: '0400123456' },
+  ] });
+  await new Promise(setImmediate); await new Promise(setImmediate);
+  saved = written;
+  assert.deepEqual(JSON.parse(saved).contacts.map(c => c.id), ['new-ops']);
+  assert.doesNotMatch(read('components/CallButton.tsx'), /tel:\$\{dial\}[\s\S]{0,150}openURL/);
 });

@@ -45,6 +45,12 @@ NOTAM and MET interpretation must run entirely on the device. Put the readers an
 
 **How to apply:** Keep pasted text and interpretation local; no remote model or server dependency. Use independent accordion sections for secondary tools/reference content; preserve entries while collapsed. Keep map-tap/GPS measurement on Map and critical operational information visible.
 
+The user does not want ANC UAV to present or imply an emergency-services calling feature. Keep a built-in 000 call button removed, block 000 in saved/dialled custom contacts, and state that emergency calls require the device's native calling feature.
+
+**Why:** The user explicitly said they do not want people thinking they can call emergency services from the app.
+
+**How to apply:** Keep any other saved operational-contact functionality distinct from emergency calls. Do not add emergency call actions or descriptions of this as an emergency-service feature.
+
 The user selected Open-Meteo's free non-commercial API for local UAV weather and explicitly accepted its terms. MET briefing interpretation must also remain entirely on device.
 
 **Why:** The user requires free weather access and local processing, and selected this source after the non-commercial restriction and coordinate sharing were explained.

@@ -4,7 +4,7 @@ import { Linking, Pressable, Text, View } from 'react-native';
 import { DISPLAY } from '@/components/FieldKit';
 import { useColors } from '@/hooks/useColors';
 import { useUi } from '@/hooks/useUi';
-import { cleanDialString, type Contact } from '@/lib/ui-store';
+import { cleanDialString, isEmergencyDialString, type Contact } from '@/lib/ui-store';
 
 /**
  * Two-step call: first tap arms, second tap dials. Prevents pocket or glove dials.
@@ -15,11 +15,14 @@ export function CallButton({ contact, onRemove }: { contact: Contact; onRemove?:
   const ui = useUi();
   const [armed, setArmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const emergency = contact.id === '000';
   const dial = cleanDialString(contact.number);
 
   async function place() {
     if (!dial) { setError('Number is not a valid dial string.'); return; }
+    if (isEmergencyDialString(contact.number)) {
+      setError("ANC UAV does not place emergency calls. Use your device's native emergency-calling feature.");
+      return;
+    }
     try {
       await Linking.openURL(`tel:${dial}`);
       setArmed(false);
@@ -28,8 +31,8 @@ export function CallButton({ contact, onRemove }: { contact: Contact; onRemove?:
     }
   }
 
-  const bg = armed ? c.signal : emergency ? c.destructive : c.card;
-  const fg = armed ? c.onSignal : emergency ? c.destructiveForeground : c.foreground;
+  const bg = armed ? c.signal : c.card;
+  const fg = armed ? c.onSignal : c.foreground;
   return (
     <View style={{ marginBottom: 10 }}>
       <View style={{ flexDirection: 'row', gap: 6 }}>

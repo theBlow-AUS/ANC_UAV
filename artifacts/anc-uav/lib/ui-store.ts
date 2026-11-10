@@ -17,7 +17,6 @@ export type UiState = {
 };
 
 const KEY = 'anc-uav.ui.v1';
-export const EMERGENCY: Contact = { id: '000', name: 'Emergency services', number: '000' };
 
 /** Dial string: optional leading +, digits and single spaces, 3 to 15 digits. */
 export function cleanDialString(input: string): string | null {
@@ -29,14 +28,18 @@ export function cleanDialString(input: string): string | null {
   return digits;
 }
 
+export function isEmergencyDialString(input: string): boolean {
+  return cleanDialString(input)?.replace(/\D/g, '') === '000';
+}
+
 function sanitizeContacts(input: unknown): Contact[] {
   const list = Array.isArray(input) ? input : [];
   const user = list
     .filter((c): c is Contact => !!c && typeof c === 'object' && typeof c.id === 'string' && typeof c.name === 'string' && typeof c.number === 'string')
-    .filter((c) => c.id !== EMERGENCY.id && cleanDialString(c.number) !== null && c.name.trim().length > 0)
+    .filter((c) => c.id !== '000' && cleanDialString(c.number) !== null && !isEmergencyDialString(c.number) && c.name.trim().length > 0)
     .slice(0, 30)
     .map((c) => ({ id: c.id, name: c.name.trim().slice(0, 60), number: c.number.trim().slice(0, 24) }));
-  return [EMERGENCY, ...user];
+  return user;
 }
 
 function sanitize(raw: unknown): Partial<UiState> {
@@ -52,7 +55,7 @@ function sanitize(raw: unknown): Partial<UiState> {
 }
 
 let state: UiState = {
-  theme: 'auto', text: 1, unit: 'km', crew: 'solo', contacts: [EMERGENCY], hydrated: false, storageError: null,
+  theme: 'auto', text: 1, unit: 'km', crew: 'solo', contacts: [], hydrated: false, storageError: null,
 };
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
@@ -61,7 +64,7 @@ let writeChain: Promise<void> = Promise.resolve();
 
 function persisted() {
   const { theme, text, unit, crew, contacts } = state;
-  return JSON.stringify({ theme, text, unit, crew, contacts: contacts.filter((c) => c.id !== EMERGENCY.id) });
+  return JSON.stringify({ theme, text, unit, crew, contacts: contacts.filter((c) => !isEmergencyDialString(c.number)) });
 }
 
 function persist() {

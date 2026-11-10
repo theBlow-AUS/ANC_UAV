@@ -19,6 +19,7 @@ The initial target is iPhone and iPad, in portrait and landscape. Android is a l
 | Pasted MET briefing / TAF | Local, limited decoding in Tools | Temporary app memory only; retained when collapsed, never uploaded or persisted, including any names in the supplied text |
 | Requested weather location and forecast | Opt-in non-commercial UAV weather reference on Aviate | Rounded 0.001° coordinates sent directly to Open-Meteo; last successful response, rounded point and consent in ordinary local preferences; provider sees IP and requested location; no Replit relay |
 | Coordinates, incident frequency notes, selected content pack | Local measurements and operator-entered references | App-local device storage; not sent to a server |
+| Saved operational phone contacts | User-entered contact names and numbers for operational use | App-local preferences; calling is optional and initiated by the user; ANC UAV has no emergency-call feature and blocks 000 |
 | ReOC/operator labels, operating profile versions, reference limits and aircraft distances | Operator-configured offline reference sets | Ordinary app-local preferences, not the credential vault; not uploaded; may be included in operating-system backups |
 | Imported PDF, Markdown, text, or JSON pack | Offline reference material | Copied to app-local device storage; not uploaded |
 | Existing NAIPS or Airservices account entry | Provider Access is off; existing secure-store values are retained and are not accessed or deleted | Any pre-existing value remains in iOS Keychain or Android Keystore; no provider sign-in or download is available |
@@ -27,6 +28,8 @@ The initial target is iPhone and iPad, in portrait and landscape. Android is a l
 | Community airport/frequency snapshot | Unverified nearby airport radio reference | Bundled locally; explicit update downloads public CSV data directly from GitHub, without location, searches or credentials |
 
 The app does not configure an ANC UAV backend, telemetry, advertising SDK, analytics SDK, or enabled provider download adapter. It does not call Replit services from the app’s product runtime. Direct acquisition is blocked after a provider-specific public-terms review on 9 November 2026: see `PROVIDER_PERMISSION_REVIEW.md`. No written agreements or supported licensed authentication/interface documentation were supplied. New credential capture is disabled for every provider. The Replit development preview workflow is separate tooling and is not part of the app’s runtime data path.
+
+ANC UAV does not provide an emergency-call feature. It does not show a built-in 000 call button and blocks saving or dialing 000 from the optional operational-contacts list. For emergencies, use the device’s native emergency-calling feature. Operational phone contacts are user-entered and are not an emergency service or assurance of emergency response.
 
 Official provider-site links open the system browser only on an explicit user action and disclose the destination to that provider under its policies. The app cannot read the browser session and does not intercept sign-in. No credentials or provider downloads pass through Replit. No source URL in an imported manifest is fetched.
 
