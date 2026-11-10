@@ -35,7 +35,6 @@ export default function CommunicationsScreen() {
 
       <PriorityRail current="comms" />
       <ActionButton label="Airport frequency lookup" icon="radio" secondary onPress={() => router.push('/airport-frequencies')} />
-      <NotamExplainer />
       <SectionHeading title="Radio scripts" detail="Callsign is “Uncrewed RPA”. Report the aircraft’s position, not yours." />
       <RadioScripts />
       <Hazard title="Loss of tower comms">The mockup says: land immediately and use a mobile phone to contact the tower. Confirm the controlled procedure.</Hazard>
@@ -109,6 +108,7 @@ export default function CommunicationsScreen() {
         </Text>
       </Panel>
 
+      <NotamExplainer />
     </Screen>
   );
 }
