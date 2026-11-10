@@ -158,22 +158,31 @@ export function SectionHeading({ title, detail }: { title: string; detail?: stri
 
 export function Badge({ children, tone = 'muted' }: { children: string; tone?: Tone }) {
   const c = useColors();
-  const [bg, fg] = { warning: [c.signal, c.onSignal], muted: [c.secondary, c.secondaryForeground], good: [c.go, c.goForeground], danger: [c.destructive, c.destructiveForeground] }[tone];
+  const ui = useUi();
+  const [bg, fg] = {
+    warning: [c.card, c.mutedForeground],
+    muted: [c.secondary, c.secondaryForeground],
+    good: [c.go, c.goForeground],
+    danger: [c.destructive, c.destructiveForeground],
+  }[tone];
+  const accent = tone === 'warning' ? c.signal : tone === 'danger' ? c.destructive : 'transparent';
   return (
-    <View style={{ alignSelf: 'flex-start', backgroundColor: bg, paddingHorizontal: 8, paddingVertical: 4 }}>
-      <Text style={{ color: fg, fontFamily: DISPLAY, fontWeight: '800', fontSize: 14, textTransform: 'uppercase' }}>{children}</Text>
+    <View style={{ alignSelf: 'flex-start', maxWidth: '100%', flexShrink: 1, backgroundColor: bg, borderLeftWidth: tone === 'muted' || tone === 'good' ? 0 : 2, borderLeftColor: accent, paddingHorizontal: 6, paddingVertical: 2 }}>
+      <Text style={{ color: fg, flexShrink: 1, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(12), lineHeight: ui.fs(15), textTransform: 'uppercase' }}>{children}</Text>
     </View>
   );
 }
 
-export function Callout({ title, children, tone = 'warning' }: { title: string; children: string; tone?: Tone }) {
+export function Callout({ title, children, tone = 'warning' }: { title: string; children: ReactNode; tone?: Tone }) {
   const c = useColors();
   const ui = useUi();
   const edge = tone === 'danger' ? c.destructive : tone === 'good' ? c.go : c.signal;
   return (
-    <View style={{ backgroundColor: c.card, borderLeftWidth: 8, borderLeftColor: edge, padding: 12, marginBottom: 12, gap: 4 }}>
-      <Text style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(20), textTransform: 'uppercase' }}>{title}</Text>
-      <Text style={{ color: c.mutedForeground, fontSize: ui.fs(14), lineHeight: ui.fs(20), fontWeight: '600' }}>{children}</Text>
+    <View style={{ backgroundColor: c.card, borderLeftWidth: 3, borderLeftColor: edge, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 8, gap: 3 }}>
+      <Text style={{ color: c.foreground, fontFamily: DISPLAY, fontWeight: '800', fontSize: ui.fs(16), lineHeight: ui.fs(19), textTransform: 'uppercase' }}>{title}</Text>
+      {typeof children === 'string'
+        ? <Text style={{ color: c.mutedForeground, fontSize: ui.fs(13), lineHeight: ui.fs(18), fontWeight: '600' }}>{children}</Text>
+        : <View style={{ gap: 4 }}>{children}</View>}
     </View>
   );
 }
@@ -222,5 +231,5 @@ const s = StyleSheet.create({
   headingRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 14 },
   eyebrow: { fontWeight: '700' },
   title: { fontFamily: DISPLAY, fontWeight: '800', textTransform: 'uppercase' },
-  panel: { borderLeftWidth: 8, padding: 14, marginBottom: 12, gap: 8 },
+  panel: { borderLeftWidth: 4, padding: 12, marginBottom: 10, gap: 6 },
 });

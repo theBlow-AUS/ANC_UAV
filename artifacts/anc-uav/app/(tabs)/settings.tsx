@@ -62,10 +62,9 @@ export default function SettingsScreen() {
         <ActionButton icon="layers" label="Packs and library" onPress={() => router.push('/library')} testID="open-library" />
         <ActionButton secondary icon="book-open" label="Quick reference" onPress={() => router.push('/quick-reference')} />
         <ActionButton secondary icon="check-square" label="Checklists" onPress={() => router.push('/checklists')} />
-        <ActionButton secondary icon="lock" label="Secure vault" onPress={() => router.push('/accounts')} />
         <ActionButton secondary icon="shield" label="Privacy" onPress={() => router.push('/privacy')} />
       </Panel>
-      <Callout title="Data coverage">No verified aerodrome or airspace dataset is installed. Distances come from GPS or entered coordinates. Credentials stay in the device's protected storage.</Callout>
+      <Callout title="Data coverage">No verified aerodrome or airspace dataset is installed. Distances come from GPS or entered coordinates. Provider Access and its credential tools are turned off.</Callout>
     </View>
   );
 

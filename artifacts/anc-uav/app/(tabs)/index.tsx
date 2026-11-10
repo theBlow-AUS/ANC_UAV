@@ -12,7 +12,7 @@ export default function AviateScreen() {
   const { storageError } = useAppData();
 
   return (
-    <Screen eyebrow="Fly the aircraft first · UAV / RPAS" title="Aviate">
+    <Screen eyebrow="Aviate the aircraft first · UAV / RPAS" title="Aviate">
       <PriorityRail current="aviate" />
       <CallButton contact={EMERGENCY} />
       {storageError ? <Callout title="Local storage issue" tone="danger">{storageError}</Callout> : null}

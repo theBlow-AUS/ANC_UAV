@@ -24,7 +24,7 @@ export default function QuickReferenceScreen() {
 
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
         {([
-          ['fly', 'Fly & Navigate'],
+          ['fly', 'Aviate & Navigate'],
           ['communicate', 'Communicate & Administer'],
         ] as const).map(([key, label]) => (
           <Pressable

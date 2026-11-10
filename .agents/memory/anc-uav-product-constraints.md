@@ -27,6 +27,12 @@ The user no longer wants a dedicated QRG tab: “Ditch the qrg tab and go with t
 
 **How to apply:** Preserve reference provenance and unverified-content warnings without keeping a QRG tab.
 
+Unverified data badges, caveats, and similar notices should be compact and visually secondary while remaining readable; keep critical safety wording visible.
+
+**Why:** The user explicitly requested smaller, less obtrusive unverified-data messaging.
+
+**How to apply:** Prefer compact, subdued status chips and short inline summaries. Keep the essential limitation in view and place secondary detail behind an accessible disclosure.
+
 The user requires incident FCTAF plus statewide references, normal aerodrome CTAFs and airspace frequencies, km/NM conversion, and distance/direction measurements using map taps and/or current location.
 
 **Why:** The user called these out separately and repeatedly.

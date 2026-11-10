@@ -23,11 +23,11 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Credentials',
-      body: 'Saved entries use iOS Keychain or Android Keystore with device authentication. The app stores only provider labels in ordinary app preferences. The password is not placed in AsyncStorage and no provider connection is active.',
+      body: 'Provider Access and its credential tools are turned off. Any entries previously saved in iOS Keychain or Android Keystore remain there; this app does not access or delete them. No provider connection is active.',
     },
     {
       title: 'Imported files and notes',
-      body: 'Imported documents and content packs stay in app storage. Text and operator-entered incident assignment notes are held in local app preferences. Use the Library removal control for imported files and the Secure Accounts screen to delete a saved credential.',
+      body: 'Imported documents and content packs stay in app storage. Text and operator-entered incident assignment notes are held in local app preferences. Use the Library removal control for imported files.',
     },
     {
       title: 'Operating profiles',
@@ -35,7 +35,7 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Provider accounts and permissions',
-      body: 'Provider terms were checked on 9 November 2026. AIP storage/business use and NAIPS automation require written permission; weather-camera reuse permission has not been established. Direct downloads and all new credential capture remain blocked. CASA/myID and AVCRM are not connected. Official-site links open outside the app; the app cannot read their sign-in sessions.',
+      body: 'Provider Access is turned off. No provider sign-in, credential access, or provider downloads are available in this app. Any old secure-vault entries remain on the device and are not accessed or deleted. CASA/myID and AVCRM are not connected.',
     },
     {
       title: 'Reference snapshots',

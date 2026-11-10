@@ -223,12 +223,11 @@ export default function LibraryScreen() {
         </Text>
       </Panel>
 
-      <SectionHeading title="Credentials" />
+      <SectionHeading title="Provider Access disabled" />
       <Panel>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          Provider downloads and new credential capture are blocked after permission review. View each provider’s requirements, manage existing secure entries, or import authorized local snapshots.
+          Provider connections, downloads and credential tools are turned off. You can still import local reference snapshots when you have permission to store them.
         </Text>
-        <ActionButton label="Provider access & secure vault" icon="lock" secondary onPress={() => router.push('/accounts')} />
         <ActionButton label="Reference snapshots & updates" icon="folder" secondary onPress={() => router.push('/references')} testID="library-reference-snapshots" />
       </Panel>
 

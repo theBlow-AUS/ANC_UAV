@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Platform, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { useNavigation } from '../context/NavigationContext';
 import { useColors } from '../hooks/useColors';
 import { useUi } from '../hooks/useUi';
@@ -39,7 +39,7 @@ function ResultCard({ r, retrievedAt }: { r: CommunityResult; retrievedAt: strin
   const closed = r.airport.sourceType.toLowerCase() === 'closed';
   return <Panel>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-      <Badge tone={r.group === 'ctaf' ? 'warning' : 'muted'}>{GROUP_LABEL[r.group]}</Badge>
+      <Badge tone="muted">{GROUP_LABEL[r.group]}</Badge>
       <Badge tone="warning">UNVERIFIED COMMUNITY DATA</Badge>
       {closed ? <Badge tone="danger">SOURCE SAYS CLOSED</Badge> : null}
     </View>
@@ -71,6 +71,7 @@ export function CommunityFrequencies() {
   const [radius, setRadius] = useState('50');
   const [group, setGroup] = useState<FrequencyGroup | 'all'>('all');
   const [page, setPage] = useState(0);
+  const [coverageOpen, setCoverageOpen] = useState(false);
   const [lat, setLat] = useState('');
   const [lon, setLon] = useState('');
   const [originMsg, setOriginMsg] = useState('');
@@ -134,8 +135,20 @@ export function CommunityFrequencies() {
 
   return <>
     <SectionHeading title="Community airport frequencies" detail="OurAirports reference records. Discovery aid only, not applicability." />
-    <Callout title="Unverified community data">
-      {`Installed: ${snapshot.airports.length} Australian aerodromes, ${snapshot.frequencies.length} frequency records (${snapshot.rejectedAirports} aerodromes and ${snapshot.rejectedFrequencies} frequencies rejected as invalid). Coverage is partial and effective dates are unknown. Tower hours and controlled status are not known. No FCTAF is inferred. No result does NOT mean no radio requirement.`}
+    <Callout title="Community data · partial">
+      <Text style={{ color: c.mutedForeground, fontSize: ui.fs(13), lineHeight: ui.fs(18), fontWeight: '600' }}>
+        Effective dates and control status are unknown. No result does NOT mean no radio requirement.
+      </Text>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: coverageOpen }} testID="community-data-limits"
+        onPress={() => setCoverageOpen(open => !open)} style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Text style={{ color: c.foreground, fontSize: ui.fs(13), fontWeight: '700' }}>
+          {coverageOpen ? 'Hide dataset limits' : 'Show dataset limits'}
+        </Text>
+        <Text style={{ color: c.mutedForeground, fontSize: ui.fs(17), fontWeight: '700' }}>{coverageOpen ? '−' : '+'}</Text>
+      </Pressable>
+      {coverageOpen ? <Text style={small}>
+        Installed: {snapshot.airports.length} Australian aerodromes and {snapshot.frequencies.length} frequency records. {snapshot.rejectedAirports} aerodromes and {snapshot.rejectedFrequencies} frequencies were rejected as invalid. Coverage is partial; tower hours are unknown. No FCTAF is inferred.
+      </Text> : null}
     </Callout>
     <Panel>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>

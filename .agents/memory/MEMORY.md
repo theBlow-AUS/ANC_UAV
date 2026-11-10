@@ -1,2 +1,3 @@
 - [ANC UAV product constraints](anc-uav-product-constraints.md) — exact name, iOS-first offline scope, agency-neutral future, and provider/content approval boundaries.
 - [Offline navigation rights](offline-navigation-rights.md) — reference geography is not operational aviation data; provider access and import assertions are not redistribution approval.
+- [Provider Access disabled](provider-access-off.md) — keep provider connection, download, credential and vault-management UI off; preserve existing device vault data.
