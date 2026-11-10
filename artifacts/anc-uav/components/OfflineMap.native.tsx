@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Text, View } from 'react-native';
-import { Camera, GeoJSONSource, Layer, Map as NativeMap, type CameraRef, type StyleSpecification } from '@maplibre/maplibre-react-native';
+import type { CameraRef, StyleSpecification } from '@maplibre/maplibre-react-native';
+import { hasMapLibreNative } from '../lib/maplibre-runtime';
+import { ReferenceMap } from './ReferenceMap';
 import type { MapBounds, NavigationPack } from '../data/navigation-pack';
 import type { Coordinate } from '../lib/geo';
 import { mapStyle, type TileBounds, type TileLayerId } from '../lib/map-tiles';
@@ -12,7 +14,14 @@ type Props = {
   onBoundsChange?: (b: TileBounds) => void; focusBounds?: TileBounds | null;
 };
 
-export function OfflineMap({ pack, origin, destination, onSelect, layer = 'openfreemap', satelliteDate = '2026-11-08', onBoundsChange, focusBounds }: Props) {
+export function OfflineMap(props: Props) {
+  return hasMapLibreNative() ? <MapLibreMap {...props} /> : <ReferenceMap {...props} />;
+}
+
+function MapLibreMap({ pack, origin, destination, onSelect, layer = 'openfreemap', satelliteDate = '2026-11-08', onBoundsChange, focusBounds }: Props) {
+  // Deliberately lazy: Expo Go does not contain MapLibre native modules.
+  const { Camera, GeoJSONSource, Layer, Map: NativeMap } =
+    require('@maplibre/maplibre-react-native') as typeof import('@maplibre/maplibre-react-native');
   const colors = useColors();
   const cameraRef = useRef<CameraRef>(null);
   const bounds = focusBounds ?? pack.bounds;

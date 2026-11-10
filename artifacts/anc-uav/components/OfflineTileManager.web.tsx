@@ -8,7 +8,7 @@ export function OfflineTileManager(_props: {
   currentBounds: TileBounds | null; initialBounds: TileBounds;
   onFocusBounds: (bounds: TileBounds) => void;
 }) {
-  return <View><Callout title="Offline map downloads require the installed iOS or Android app">
-    The browser preview cannot create native MapLibre offline packs. Use the native app build to download map areas to device storage.
+  return <View><Callout title="Offline downloads require a MapLibre-enabled app build">
+    Expo Go and the browser preview cannot create native offline map packs. The local reference map remains available. Use an app build with MapLibre to download map areas to device storage.
   </Callout><Text /></View>;
 }

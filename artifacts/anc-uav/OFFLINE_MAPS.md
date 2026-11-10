@@ -1,6 +1,6 @@
 # Offline map tiles
 
-The native map view uses MapLibre Native. Map downloads are performed directly by the iOS or Android app and stored in MapLibre's local offline database; there is no Replit map proxy, account, API key, or app-server dependency. The browser preview retains the schematic map and cannot create native offline packs. Expo Go does not include MapLibre; the app must be rebuilt with its Expo config plugin for device use.
+The native map view uses MapLibre Native. Map downloads are performed directly by the iOS or Android app and stored in MapLibre's local offline database; there is no Replit map proxy, account, API key, or app-server dependency. Expo Go and the browser preview use the local schematic reference map and cannot create native offline packs. The app checks native capabilities before loading MapLibre, so missing modules do not prevent startup or access to other tabs. Full tile rendering and downloads require an app binary built with the MapLibre Expo config plugin.
 
 ## Available layers
 

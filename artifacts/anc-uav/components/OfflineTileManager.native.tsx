@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
-import { OfflineManager, type OfflinePack, type OfflinePackStatus } from '@maplibre/maplibre-react-native';
+import type { OfflinePack, OfflinePackStatus } from '@maplibre/maplibre-react-native';
+import { hasMapLibreNative } from '../lib/maplibre-runtime';
+import { OfflineTileManager as UnavailableDownloads } from './OfflineTileManager.web';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { ActionButton, Badge, Callout, Panel, SectionHeading, TextField } from './FieldKit';
@@ -36,9 +38,15 @@ function statusText(status?: OfflinePackStatus) {
   return `Paused · ${status.completedTileCount.toLocaleString()} tiles`;
 }
 
-export function OfflineTileManager({
+export function OfflineTileManager(props: Props) {
+  return hasMapLibreNative() ? <NativeTileManager {...props} /> : <UnavailableDownloads {...props} />;
+}
+
+function NativeTileManager({
   layer, onLayerChange, satelliteDate, onSatelliteDateChange, currentBounds, initialBounds, onFocusBounds,
 }: Props) {
+  const { OfflineManager } =
+    require('@maplibre/maplibre-react-native') as typeof import('@maplibre/maplibre-react-native');
   const colors = useColors();
   const [areaMode, setAreaMode] = useState<'view' | 'region' | 'custom'>('view');
   const [regionId, setRegionId] = useState('au');
