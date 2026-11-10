@@ -1,9 +1,11 @@
 import * as Location from 'expo-location';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, Text, View } from 'react-native';
-import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading, TextField } from '@/components/FieldKit';
+import { ActionButton, Badge, Callout, Panel, Screen, SectionHeading } from '@/components/FieldKit';
+import { Accordion } from '@/components/Accordion';
 import { useColors } from '@/hooks/useColors';
-import { distanceKm, formatCoordinate, initialBearingDegrees, kmToNm, nmToKm, parseCoordinate } from '@/lib/geo';
+import { distanceKm, formatCoordinate, initialBearingDegrees, kmToNm, parseCoordinate } from '@/lib/geo';
 import { useNavigation } from '@/context/NavigationContext';
 import { OfflineMap } from '@/components/OfflineMap';
 import { NavigationPacks } from '@/components/NavigationPacks';
@@ -26,8 +28,6 @@ export default function MapMeasureScreen() {
   const [destinationLatitude, setDestinationLatitude] = useState('');
   const [destinationLongitude, setDestinationLongitude] = useState('');
   const [positionError, setPositionError] = useState<string | null>(null);
-  const [conversionValue, setConversionValue] = useState('');
-  const [conversionUnit, setConversionUnit] = useState<'km' | 'nm'>('km');
   const [mapLayer, setMapLayer] = useState<TileLayerId>('openfreemap');
   const [satelliteDate, setSatelliteDate] = useState(() => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [visibleBounds, setVisibleBounds] = useState<TileBounds | null>(null);
@@ -58,10 +58,6 @@ export default function MapMeasureScreen() {
   function chooseDestination(p: Coordinate, name = 'Map-selected point') {
     setDestinationLatitude(formatCoordinate(p.latitude)); setDestinationLongitude(formatCoordinate(p.longitude));
     setDestinationName(name);
-  }
-  function editOrigin(latitude: string, longitude: string) {
-    setGps(null); setOriginLatitude(latitude); setOriginLongitude(longitude);
-    setQuery({ ...query, position: parseCoordinate(latitude, longitude) });
   }
 
   async function useCurrentLocation() {
@@ -109,14 +105,6 @@ export default function MapMeasureScreen() {
     }
   }
 
-  const numericConversion = Number(conversionValue);
-  const converted =
-    conversionValue.trim() && Number.isFinite(numericConversion) && numericConversion >= 0
-      ? conversionUnit === 'km'
-        ? `${kmToNm(numericConversion).toFixed(3)} NM`
-        : `${nmToKm(numericConversion).toFixed(3)} km`
-      : 'Enter a non-negative number';
-
   return (
     <Screen
       eyebrow="Offline position tools"
@@ -145,14 +133,16 @@ export default function MapMeasureScreen() {
         {destination && !insideBounds(destination, active.bounds) ? <Text style={{ color: colors.destructive }}>Destination B is outside the displayed map’s coverage.</Text> : null}
       </Panel>
 
+      <Accordion title="Offline maps & layers" summary="Select a layer, download an area or manage saved regions" icon="download" testID="map-offline-layers">
       <OfflineTileManager
         layer={mapLayer} onLayerChange={setMapLayer}
         satelliteDate={satelliteDate} onSatelliteDateChange={setSatelliteDate}
         currentBounds={visibleBounds} initialBounds={active.bounds}
         onFocusBounds={setFocusBounds}
       />
+      </Accordion>
 
-      <SectionHeading title="Measurement origin" detail="Use device GPS or enter a WGS84 coordinate." />
+      <SectionHeading title="Measurement origin" detail="Use device GPS or tap the map for point A." />
       <Panel>
         {gps ? (
           <View style={{ gap: 3, marginBottom: 5 }}>
@@ -181,29 +171,10 @@ export default function MapMeasureScreen() {
       </Panel>
 
       <Panel>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>Origin coordinates</Text>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <TextField label="Latitude" value={originLatitude} onChangeText={v => editOrigin(v, originLongitude)} placeholder="-33.8688" keyboardType="numbers-and-punctuation" testID="origin-latitude" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <TextField label="Longitude" value={originLongitude} onChangeText={v => editOrigin(originLatitude, v)} placeholder="151.2093" keyboardType="numbers-and-punctuation" testID="origin-longitude" />
-          </View>
-        </View>
-        <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Coordinates are manually entered or map-selected unless the GPS fix is shown above. Editing clears its GPS label.</Text>
-      </Panel>
-
-      <Panel>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>Destination point</Text>
-        <TextField label="Point name" value={destinationName} onChangeText={setDestinationName} placeholder="Aerodrome, locality, or landmark" testID="destination-name" />
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <TextField label="Latitude" value={destinationLatitude} onChangeText={setDestinationLatitude} placeholder="-34.0000" keyboardType="numbers-and-punctuation" testID="destination-latitude" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <TextField label="Longitude" value={destinationLongitude} onChangeText={setDestinationLongitude} placeholder="151.0000" keyboardType="numbers-and-punctuation" testID="destination-longitude" />
-          </View>
-        </View>
+        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>Selected points · WGS84</Text>
+        <Text selectable style={{ color: colors.foreground }}>A: {origin ? `${originLatitude}, ${originLongitude}` : 'Not selected'}</Text>
+        <Text selectable style={{ color: colors.foreground }}>B: {destination ? `${destinationLatitude}, ${destinationLongitude}${destinationName ? ` · ${destinationName}` : ''}` : 'Not selected'}</Text>
+        <ActionButton secondary icon="tool" label="Manual coordinates & converters" onPress={() => router.navigate('/tools')} />
       </Panel>
 
       {measurement ? (
@@ -227,31 +198,20 @@ export default function MapMeasureScreen() {
       {originLatitude || originLongitude || destinationLatitude || destinationLongitude ? (
         !origin || !destination ? (
             <Text style={{ fontSize: 12, color: colors.destructive }}>
-            Enter valid latitude (−90 to 90) and longitude (−180 to 180) for both points.
+            Select the missing point on the map, or use GPS for point A.
           </Text>
         ) : null
       ) : null}
 
-      <SectionHeading title="Distance converter" detail="1 nautical mile = 1.852 kilometres." />
-      <Panel>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={{ flex: 1 }}>
-            <TextField label={conversionUnit === 'km' ? 'Kilometres' : 'Nautical miles'} value={conversionValue} onChangeText={setConversionValue} keyboardType="decimal-pad" placeholder="0.0" testID="unit-converter-input" />
-          </View>
-          <View style={{ justifyContent: 'flex-end', paddingBottom: 12 }}>
-            <ActionButton
-              label={conversionUnit === 'km' ? 'Convert to NM' : 'Convert to km'}
-              onPress={() => setConversionUnit((current) => (current === 'km' ? 'nm' : 'km'))}
-              secondary
-            />
-          </View>
-        </View>
-        <Text style={{ fontSize: 17, fontWeight: '700', color: colors.primary }}>{converted}</Text>
-      </Panel>
-
+      <Accordion title="Nearby aerodromes & localities" summary="Offline reference lookup · no complete coverage claimed" icon="map-pin">
       <NearbyPlaces onSelect={p => chooseDestination(p.position, p.name)} />
+      </Accordion>
+      <Accordion title="Frequency applicability lookup" summary="Installed source records · not a clearance" icon="radio">
       <FrequencyLookup />
+      </Accordion>
+      <Accordion title="Reference packs & sources" summary="Coverage, source details and local pack management" icon="layers">
       <NavigationPacks />
+      </Accordion>
     </Screen>
   );
 }

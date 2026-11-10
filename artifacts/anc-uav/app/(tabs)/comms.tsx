@@ -6,7 +6,7 @@ import { PriorityRail } from '@/components/PriorityRail';
 import { RadioScripts } from '@/components/RadioScripts';
 import { FrequencyLookup } from '@/components/FrequencyLookup';
 import { CommunityFrequencies } from '@/components/CommunityFrequencies';
-import { NotamExplainer } from '@/components/NotamExplainer';
+import { Accordion } from '@/components/Accordion';
 import { NSW_FCTAF_REFERENCE, RFS_PACK_ID } from '@/data/rfs-pack';
 import { useAppData } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
@@ -39,7 +39,12 @@ export default function CommunicationsScreen() {
       <RadioScripts />
       <Hazard title="Loss of tower comms">The mockup says: land immediately and use a mobile phone to contact the tower. Confirm the controlled procedure.</Hazard>
 
-      <SectionHeading title="Incident / sector FCTAF" detail="A received assignment is separate from a statewide reference." />
+      <SectionHeading title="Frequencies & coverage" detail="Tap a section to expand. Recorded assignments stay listed in the summary." />
+      <Accordion title="Incident / sector FCTAF" icon="flag" testID="acc-incident" defaultOpen={visibleAssignments.length > 0} summary={<>
+        <Badge tone={visibleAssignments.length ? 'warning' : 'muted'}>{visibleAssignments.length ? `${visibleAssignments.length} RECORDED · NOT VERIFIED` : 'NONE RECORDED'}</Badge>
+        {visibleAssignments.map((a) => <Badge key={a.id} tone="warning">{`${a.incident} · ${a.frequencyMHz} MHz${a.sector ? ' · ' + a.sector : ''}`}</Badge>)}
+      </>}>
+        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground, marginBottom: 8 }}>A received assignment is separate from a statewide reference.</Text>
       <Panel>
         <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>Operator-recorded assignments</Text>
         {visibleAssignments.length ? (
@@ -76,6 +81,8 @@ export default function CommunicationsScreen() {
         </Text>
       </Panel>
 
+      </Accordion>
+      <Accordion title="Statewide reference" icon="map" testID="acc-statewide" summary={isRfsPack ? <><Badge tone="warning">SCOPE-LIMITED</Badge><Badge>{`${NSW_FCTAF_REFERENCE.frequencyMHz} MHz`}</Badge></> : <Badge>NONE IN THIS PACK</Badge>}>
       {isRfsPack ? (
         <Panel>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
@@ -95,10 +102,14 @@ export default function CommunicationsScreen() {
         </Callout>
       )}
 
-      <CommunityFrequencies />
-      <FrequencyLookup />
-
-      <SectionHeading title="Airspace / broadcast-area frequencies" />
+      </Accordion>
+      <Accordion title="Community airport frequencies" icon="radio" testID="acc-community" summary={<Badge tone="warning">OURAIRPORTS · UNVERIFIED</Badge>}>
+        <CommunityFrequencies />
+      </Accordion>
+      <Accordion title="Spatial frequency lookup" icon="crosshair" testID="acc-lookup" summary="Applicability by position, altitude and time.">
+        <FrequencyLookup />
+      </Accordion>
+      <Accordion title="Airspace / broadcast-area coverage" icon="layers" testID="acc-coverage" summary={<Badge tone="warning">{importedOtherRecords ? `${importedOtherRecords} IMPORTED · UNVERIFIED` : 'SPATIAL DATA NOT IMPORTED'}</Badge>}>
       <Panel>
         <Badge tone="warning">{importedOtherRecords ? `${importedOtherRecords} IMPORTED ATS RECORDS · UNVERIFIED` : 'AIRSPACE / ATS SPATIAL DATA NOT IMPORTED'}</Badge>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
@@ -108,7 +119,7 @@ export default function CommunicationsScreen() {
         </Text>
       </Panel>
 
-      <NotamExplainer />
+      </Accordion>
     </Screen>
   );
 }

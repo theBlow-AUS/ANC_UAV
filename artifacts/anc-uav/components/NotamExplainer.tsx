@@ -6,7 +6,7 @@ import { explainNotam, type NotamExplanation } from '../lib/notam-explainer';
 
 const MAX_NOTAM_LENGTH = 12_000;
 
-export function NotamExplainer() {
+export function NotamExplainer({ embedded = false }: { embedded?: boolean }) {
   const colors = useColors();
   const [draft, setDraft] = useState('');
   const [result, setResult] = useState<NotamExplanation | null>(null);
@@ -30,7 +30,7 @@ export function NotamExplainer() {
 
   return (
     <View>
-      <SectionHeading title="NOTAM plain-English" detail="Paste supplied text · parsed on this device" />
+      {!embedded ? <SectionHeading title="NOTAM plain-English" detail="Paste supplied text · parsed on this device" /> : null}
       <Callout title="Reading aid only">
         This does not fetch NOTAMs or verify currency, completeness, applicability, or operational meaning. Check the current official NOTAM and approved publications. Never use this explanation as clearance or a flight-planning decision.
       </Callout>

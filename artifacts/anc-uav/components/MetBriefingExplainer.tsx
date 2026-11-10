@@ -4,14 +4,14 @@ import { ActionButton, Badge, Callout, Panel, SectionHeading, TextField } from '
 import { useColors } from '../hooks/useColors';
 import { explainMetBriefing, type MetReading } from '../lib/met-briefing';
 
-export function MetBriefingExplainer() {
+export function MetBriefingExplainer({ embedded = false }: { embedded?: boolean }) {
   const c = useColors();
   const [draft, setDraft] = useState('');
   const [reading, setReading] = useState<MetReading | null>(null);
   const [error, setError] = useState('');
   function change(text: string) { setDraft(text); setReading(null); setError(''); }
   return <View>
-    <SectionHeading title="MET briefing · plain English" detail="Local reader for a TAF or the supplied Australian briefing format" />
+    {!embedded ? <SectionHeading title="MET briefing · plain English" detail="Local reader for a TAF or the supplied Australian briefing format" /> : null}
     <Callout title="Reading aid, not a weather briefing">
       No upload, AI service, or provider lookup. It cannot confirm the latest forecast or whether conditions are suitable for flight. Unsupported codes stay visible; source times stay in UTC.
     </Callout>

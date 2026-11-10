@@ -21,7 +21,7 @@ The initial focus is RFS, but the product should become agency agnostic so other
 
 **How to apply:** Keep agency/jurisdiction content separate. Preserve issuer, source, version, and rights provenance rather than treating RFS defaults as universal.
 
-The user no longer wants a dedicated QRG tab: “Ditch the qrg tab and go with this design instead.” Use the supplied field redesign's Aviate, Navigate, Map, Comms and Settings navigation.
+The user no longer wants a dedicated QRG tab: “Ditch the qrg tab and go with this design instead.” The current requested navigation order is Aviate, Navigate, Comms, Map, Tools, Settings.
 
 **Why:** The user explicitly superseded the earlier dedicated-QRG-tab requirement.
 
@@ -39,11 +39,11 @@ The user requires incident FCTAF plus statewide references, normal aerodrome CTA
 
 **How to apply:** Missing aviation/map data must be shown as missing, not as a clear or safe result. Never infer an incident-assigned FCTAF from location.
 
-The NOTAM-to-plain-English tool belongs in Comms and must run entirely on the device.
+NOTAM and MET interpretation must run entirely on the device. Put the readers and standalone calculators/converters in Tools, immediately before Settings, rather than the operational tabs. The user approved moving all four offered calculators, including aerodrome comparison and manual coordinate distance/bearing.
 
-**Why:** The user explicitly requested on-device conversion in the Comms section.
+**Why:** The user explicitly superseded the earlier Comms/Navigate converter placement and approved all additional tool moves.
 
-**How to apply:** Keep pasted text and interpretation local; do not introduce a remote model or server dependency for the converter.
+**How to apply:** Keep pasted text and interpretation local; no remote model or server dependency. Use independent accordion sections for secondary tools/reference content; preserve entries while collapsed. Keep map-tap/GPS measurement on Map and critical operational information visible.
 
 The user selected Open-Meteo's free non-commercial API for local UAV weather and explicitly accepted its terms. MET briefing interpretation must also remain entirely on device.
 

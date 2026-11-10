@@ -1,7 +1,9 @@
+import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Linking, Platform, Pressable, Text, View } from 'react-native';
+import { Accordion } from './Accordion';
 import { ActionButton, Badge, Callout, Panel, SectionHeading } from './FieldKit';
 import { useColors } from '../hooks/useColors';
 import {
@@ -109,15 +111,29 @@ export function UavWeather() {
       400 ft is about 122 m. Wind may vary with terrain, buildings and height. No flight-suitability verdict is given. Check official warnings, aviation weather, your aircraft limits and actual conditions.
     </Callout>
     <Panel>
-      <Text style={small}>Free Open-Meteo service · non-commercial use only. Weather retrieval sends coordinates rounded to 0.001° (~100 m) and your IP directly to Open-Meteo. No Replit server, API key or remote interpretation. Nothing is fetched automatically.</Text>
+      {snapshot ? <Badge tone="warning">{weatherAge(snapshot, now)}</Badge> : null}
+      {snapshot ? <Text style={small}>Saved requested area: {snapshot.latitude.toFixed(3)}, {snapshot.longitude.toFixed(3)} · not live GPS.</Text> : null}
+      {current ? <>
+        <Text style={{ ...body, fontWeight: '700' }}>Forecast for {formatTime(current.time)}</Text>
+        <Text style={body}>120 m wind: {windUnits(current.wind_speed_120m)} · 10 m gust (preceding hour): {windUnits(current.wind_gusts_10m)}</Text>
+        <Text style={body}>Precipitation chance: {current.precipitation_probability === null ? 'not supplied' : `${current.precipitation_probability}%`} · total: {current.precipitation === null ? 'not supplied' : `${current.precipitation} mm`} over the preceding hour ending at the displayed time.</Text>
+      </> : snapshot ? <Text style={body}>No forecast covering the present hour is saved. Refresh when online; older data is not shown as current.</Text>
+        : <Text style={small}>No forecast saved. Request one while online to keep the last successful snapshot on this device for offline reference.</Text>}
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: accepted, disabled: busy }} disabled={busy} testID="weather-consent"
-        onPress={() => void toggleConsent()} style={{ minHeight: 48, paddingVertical: 10, flexDirection: 'row', gap: 8 }}>
-        <Text style={body}>{accepted ? '☑' : '☐'} I accept non-commercial use and coordinate sharing.</Text>
+        onPress={() => void toggleConsent()} style={{ minHeight: 48, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Feather name={accepted ? 'check-square' : 'square'} size={22} color={c.foreground} />
+        <Text style={{ ...body, flex: 1 }}>I accept non-commercial use and coordinate sharing.</Text>
       </Pressable>
+      <Text style={small}>Free Open-Meteo service · non-commercial use only. Retrieval sends coordinates rounded to 0.001° (~100 m) and your IP directly to Open-Meteo. Nothing is fetched automatically.</Text>
       <ActionButton label={busy ? 'Getting forecast…' : 'Use GPS for weather'} icon="cloud" onPress={() => void refresh()}
         disabled={!accepted || busy || !ready || unreadable} testID="weather-refresh" />
       {Platform.OS !== 'web' && permission?.status === 'denied' && !permission.canAskAgain ?
         <ActionButton secondary label="Open device settings" onPress={() => { void Linking.openSettings().catch(() => setError('Open device Settings manually to allow location.')); }} /> : null}
+      {error ? <Callout title="Weather notice" tone="danger"><Text accessibilityRole="alert" style={small}>{error}</Text></Callout> : null}
+    </Panel>
+    <Accordion title="Weather source & storage" icon="settings" testID="acc-weather-source" summary="Terms, licence, privacy and clearing saved data.">
+      <Text style={small}>No Replit server, API key or remote interpretation is used. Weather requests go directly from this device to Open-Meteo.</Text>
+      <View style={{ height: 8 }} />
       <ActionButton secondary label="Weather terms & source" icon="external-link" onPress={() => {
         void Linking.openURL('https://open-meteo.com/en/terms').catch(() => setError('Could not open weather terms.'));
       }} />
@@ -126,9 +142,8 @@ export function UavWeather() {
       }} />
       <ActionButton secondary label="Clear saved weather" icon="trash-2" disabled={busy || !ready}
         onPress={() => void clear()} testID="weather-clear" />
-      {error ? <Text accessibilityRole="alert" style={small}>{error}</Text> : null}
-    </Panel>
-    {snapshot ? <Panel>
+    </Accordion>
+    {snapshot ? <Accordion title="Full forecast profile" icon="wind" testID="acc-weather-detail" summary={`Retrieved ${formatTime(snapshot.retrievedAt)} · 10 / 80 / 120 m profile, next hours`}>
       <Badge tone="warning">{weatherAge(snapshot, now)}</Badge>
       <Text style={small}>Requested area: {snapshot.latitude.toFixed(3)}, {snapshot.longitude.toFixed(3)} · last requested point, not continuous GPS.</Text>
       <Text style={small}>Model grid: {snapshot.gridLatitude.toFixed(3)}, {snapshot.gridLongitude.toFixed(3)}. Retrieved {formatTime(snapshot.retrievedAt)}; provider issue time is not supplied.</Text>
@@ -151,6 +166,6 @@ export function UavWeather() {
         {hours.map(hour => <Text key={hour.time} style={small}>{formatTime(hour.time)} · 120 m wind {hour.wind_speed_120m === null ? 'not supplied' : `${hour.wind_speed_120m.toFixed(1)} m/s`} · precipitation {hour.precipitation_probability === null ? 'chance unavailable' : `${hour.precipitation_probability}%`} · {hour.precipitation === null ? 'amount unavailable' : `${hour.precipitation} mm`}</Text>)}
       </View> : null}
       <Text style={small}>Precipitation includes rain, showers and snow; probability is not a guarantee of dry conditions. Missing data is never treated as zero. Source: Open-Meteo (CC BY 4.0), selected forecast models; display and unit conversions by ANC UAV. Not endorsed by the provider.</Text>
-    </Panel> : <Text style={{ ...small, marginBottom: 12 }}>No forecast saved. Request one while online to keep the last successful snapshot on this device for offline reference.</Text>}
+    </Accordion> : null}
   </View>;
 }

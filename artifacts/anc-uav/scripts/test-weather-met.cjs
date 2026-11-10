@@ -143,5 +143,8 @@ test('weather has no automatic retrieval path; placement and local reading stay 
   const aviate = fs.readFileSync(require.resolve('../app/(tabs)/index.tsx'), 'utf8');
   assert.ok(aviate.indexOf('<UavWeather') < aviate.indexOf('label="Traffic call script"'));
   const navigate = fs.readFileSync(require.resolve('../app/(tabs)/navigate.tsx'), 'utf8');
-  assert.match(navigate, /<MetBriefingExplainer\s*\/>\s*<\/Screen>/);
+  assert.doesNotMatch(navigate, /<MetBriefingExplainer/);
+  const tools = fs.readFileSync(require.resolve('../app/(tabs)/tools.tsx'), 'utf8');
+  assert.match(tools, /<MetBriefingExplainer embedded/);
+  assert.match(tools, /<NotamExplainer embedded/);
 });
