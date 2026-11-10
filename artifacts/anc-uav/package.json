@@ -18,6 +18,7 @@
     "test:map-tiles": "node --test scripts/test-map-tiles.cjs",
     "test:notam": "node --test scripts/test-notam-explainer.cjs",
     "test:weather-met": "node --test scripts/test-weather-met.cjs",
+    "test:weather-component": "node --test scripts/test-weather-component.cjs",
     "test:tools": "node --test scripts/test-tools.cjs"
   },
   "devDependencies": {

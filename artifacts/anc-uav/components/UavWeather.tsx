@@ -26,9 +26,11 @@ export function UavWeather() {
   const [now, setNow] = useState(Date.now());
   const locked = useRef(false);
   const controller = useRef<AbortController | null>(null);
+  const lifecycle = useRef({ mounted: false, generation: 0 });
   const [permission, requestPermission] = Location.useForegroundPermissions();
   useEffect(() => {
     let mounted = true;
+    lifecycle.current.mounted = true;
     Promise.all([AsyncStorage.getItem(WEATHER_CACHE_KEY), AsyncStorage.getItem(WEATHER_CONSENT_KEY)])
       .then(([raw, consent]) => {
         if (raw && raw.length > 1200000) throw new Error('Saved weather is oversized.');
@@ -39,9 +41,19 @@ export function UavWeather() {
       }).finally(() => { if (mounted) setReady(true); });
     const timer = setInterval(() => setNow(Date.now()), 60000);
     const appState = AppState.addEventListener('change', state => {
-      if (state !== 'active') controller.current?.abort();
+      if (state !== 'active') {
+        lifecycle.current.generation += 1;
+        controller.current?.abort();
+      }
     });
-    return () => { mounted = false; clearInterval(timer); appState.remove(); controller.current?.abort(); };
+    return () => {
+      mounted = false;
+      lifecycle.current.mounted = false;
+      lifecycle.current.generation += 1;
+      clearInterval(timer);
+      appState.remove();
+      controller.current?.abort();
+    };
   }, []);
   async function toggleConsent() {
     if (locked.current) return;
@@ -55,9 +67,13 @@ export function UavWeather() {
   }
   async function refresh() {
     if (!accepted || !ready || unreadable || locked.current) return;
+    const generation = ++lifecycle.current.generation;
     locked.current = true; setBusy(true); setError('');
     try {
       await AsyncStorage.setItem(WEATHER_CONSENT_KEY, 'accepted');
+      if (!lifecycle.current.mounted || lifecycle.current.generation !== generation) {
+        throw new Error('Weather request cancelled because the app became inactive.');
+      }
       let latitude: number, longitude: number, fixAccuracy: number | null;
       if (Platform.OS === 'web') {
         if (!navigator.geolocation) throw new Error('GPS is not available in this browser.');
@@ -69,6 +85,9 @@ export function UavWeather() {
         if (!granted.granted) throw new Error('Location permission denied. Enable it in device Settings to request local weather.');
         const fix = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
         ({ latitude, longitude, accuracy: fixAccuracy } = fix.coords);
+      }
+      if (!lifecycle.current.mounted || lifecycle.current.generation !== generation) {
+        throw new Error('Weather request cancelled because the app became inactive.');
       }
       const point = roundedWeatherPoint(latitude, longitude);
       setAccuracy(fixAccuracy);
@@ -82,14 +101,21 @@ export function UavWeather() {
       const timeout = setTimeout(() => abort.abort(), 15000);
       try {
         const next = await downloadWeather(point.latitude, point.longitude, abort.signal);
-        if (abort.signal.aborted) throw new Error('Weather request cancelled.');
+        if (abort.signal.aborted || !lifecycle.current.mounted || lifecycle.current.generation !== generation) {
+          throw new Error('Weather request cancelled.');
+        }
         await AsyncStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(next.cache));
         setSnapshot(next.snapshot); setNow(Date.now());
       } finally { clearTimeout(timeout); controller.current = null; }
     } catch (e) {
-      setError(e instanceof Error && e.name === 'AbortError' ? 'Weather request timed out or was cancelled. Any saved forecast is unchanged.' :
-        e instanceof Error ? `${e.message} Any saved forecast is unchanged.` : 'Weather is unavailable. Any saved forecast is unchanged.');
-    } finally { locked.current = false; setBusy(false); }
+      if (lifecycle.current.mounted) {
+        setError(e instanceof Error && e.name === 'AbortError' ? 'Weather request timed out or was cancelled. Any saved forecast is unchanged.' :
+          e instanceof Error ? `${e.message} Any saved forecast is unchanged.` : 'Weather is unavailable. Any saved forecast is unchanged.');
+      }
+    } finally {
+      locked.current = false;
+      if (lifecycle.current.mounted) setBusy(false);
+    }
   }
   async function clear() {
     if (locked.current) return;
