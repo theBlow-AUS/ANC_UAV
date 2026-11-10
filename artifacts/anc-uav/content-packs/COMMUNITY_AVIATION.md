@@ -1,5 +1,10 @@
 # Australian community airport frequencies
 
+For native key-free OpenAIP airport/airspace downloads and optional personal-key
+detail refresh, see [OpenAIP downloads](OPENAIP_DOWNLOADS.md). This supersedes
+earlier statements below about a bundled-only OpenAIP runtime; the OurAirports
+CSV updater remains a separate source and store.
+
 ## What is bundled
 
 The app bundles a filtered Australian snapshot of OurAirports' `airports.csv`

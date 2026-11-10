@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
 import type { MapBounds, NavigationPack } from '../data/navigation-pack';
 import { useColors } from '../hooks/useColors';
 import type { Coordinate } from '../lib/geo';
 import { coordinateToMap, insideBounds, mapToCoordinate } from '../lib/navigation';
 import { ActionButton } from './FieldKit';
 import type { TileBounds, TileLayerId } from '../lib/map-tiles';
+import { useOpenAip } from '../context/OpenAipContext';
+import { OPENAIP_PACK_ID, polygons } from '../lib/openaip-data';
 
 type Props = {
   pack: NavigationPack; origin: Coordinate | null; destination: Coordinate | null;
@@ -17,6 +19,7 @@ type Props = {
 /** Local schematic fallback for browser previews and native builds without MapLibre. */
 export function ReferenceMap({ pack, origin, destination, onSelect, onBoundsChange, focusBounds, layer = 'openfreemap' }: Props) {
   const colors = useColors();
+  const { snapshot, visible } = useOpenAip();
   const [width, setWidth] = useState(320);
   const [viewport, setViewport] = useState<MapBounds | null>(null);
   const bounds = viewport ?? focusBounds ?? pack.bounds;
@@ -24,7 +27,18 @@ export function ReferenceMap({ pack, origin, destination, onSelect, onBoundsChan
   const height = Math.max(240, Math.min(420, width * (bounds.north - bounds.south) /
     ((bounds.east - bounds.west) * Math.cos((bounds.north + bounds.south) / 2 * Math.PI / 180))));
   const project = (p: Coordinate) => coordinateToMap(p, bounds, width, height);
-  const visiblePlaces = pack.places.filter(p => insideBounds(p.position, bounds));
+  const visiblePlaces = pack.places.filter(p => insideBounds(p.position, bounds) && (visible || pack.id !== OPENAIP_PACK_ID));
+  const airspacePaths = useMemo(() => snapshot && visible ? snapshot.airspaces.flatMap(r => polygons(r).map((poly, index) => {
+    // Do not draw a spurious across-world segment for an antimeridian ring.
+    if (poly.some(ring => ring.some((q, i) => Math.abs(q[0] - ring[(i + 1) % ring.length][0]) > 180))) return null;
+    const path = poly.map(ring => ring.map((p, i) => {
+      const q = coordinateToMap({ longitude: p[0], latitude: p[1] }, bounds, width, height);
+      return `${i === 0 ? 'M' : 'L'}${q.x.toFixed(2)},${q.y.toFixed(2)}`;
+    }).join(' ') + ' Z').join(' ');
+    return { id: `${r.id}-${index}`, path };
+  })).filter((p): p is { id: string; path: string } => p !== null) : [], [snapshot, visible, bounds, width, height]);
+  const extraAirports = snapshot && visible ? snapshot.airports.filter(a =>
+    insideBounds(a.position, bounds) && !pack.places.some(p => p.id === `openaip-${a.id}`)) : [];
   function zoom(factor: number) {
     const centre = origin && insideBounds(origin, bounds) ? origin : mapToCoordinate(width / 2, height / 2, bounds, width, height);
     const dx = Math.min(pack.bounds.east - pack.bounds.west, Math.max(.002, (bounds.east - bounds.west) * factor));
@@ -53,12 +67,18 @@ export function ReferenceMap({ pack, origin, destination, onSelect, onBoundsChan
       <Svg width={width} height={height} pointerEvents="none">
         {pack.land.map((ring, i) => <Polygon key={i} points={ring.map(p => { const q = project(p); return `${q.x},${q.y}`; }).join(' ')}
           fill={colors.secondary} stroke={colors.mutedForeground} strokeWidth={1} />)}
+        {airspacePaths.map(p => <Path key={p.id} d={p.path} fillRule="evenodd" fill={colors.signal} fillOpacity={0.04}
+          stroke={colors.signal} strokeWidth={1} />)}
         {[.25, .5, .75].map(t => <Line key={`x${t}`} x1={width * t} x2={width * t} y1={0} y2={height} stroke={colors.border} strokeDasharray="3 5" />)}
         {[.25, .5, .75].map(t => <Line key={`y${t}`} y1={height * t} y2={height * t} x1={0} x2={width} stroke={colors.border} strokeDasharray="3 5" />)}
         {visiblePlaces.map(p => {
           const point = project(p.position);
           return <Circle key={p.id} cx={point.x} cy={point.y} r={p.kind === 'locality' ? 2 : 4}
             fill={p.kind === 'locality' ? colors.mutedForeground : colors.primary} />;
+        })}
+        {extraAirports.map(p => {
+          const point = project(p.position);
+          return <Circle key={`openaip-${p.id}`} cx={point.x} cy={point.y} r={3} fill={colors.foreground} />;
         })}
         {visiblePlaces.length <= 12 ? visiblePlaces.map(p => {
           const point = project(p.position);
@@ -76,6 +96,9 @@ export function ReferenceMap({ pack, origin, destination, onSelect, onBoundsChan
     <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
       Schematic reference only. The selected {layer === 'openfreemap' ? 'OpenStreetMap' : layer === 'topographic' ? 'topographic' : 'satellite'} layer requires an app build with MapLibre; it is unavailable in Expo Go and the browser preview.
     </Text>
+    {snapshot && visible ? <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+      OpenAIP contributors · 2D reference overlays; altitude/time/NOTAM conditions are not applied. Antimeridian-spanning polygons are not drawn in this flat projection. Tap to inspect sources below; not primary navigation or flight planning.
+    </Text> : null}
     <View style={styles.row}>
       <ActionButton label="Zoom in" onPress={() => zoom(.5)} testID="map-zoom-in" secondary />
       <ActionButton label="Zoom out" onPress={() => zoom(2)} secondary />

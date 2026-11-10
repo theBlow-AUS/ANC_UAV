@@ -60,8 +60,18 @@ frequency-to-area link have not been established for this app. See
 
 ## Runtime and storage
 
-Everything is computed locally. There is no map SDK, tile URL, API key,
-background download or Replit service. The separate community reference makes
+**Runtime OpenAIP addition:** Map now offers explicit native public downloads and
+optional device-only personal-key detail refresh. These use an isolated local
+file store; they do not change the imported-pack contract. OpenAIP geometry is
+independent of frequency presence, and a complete downloaded generation
+supersedes the older bundled OpenAIP lookup source without deleting it.
+See [OpenAIP downloads](OPENAIP_DOWNLOADS.md) for limits, privacy, licence,
+recovery and the distinct detail cache. The paragraph below describes the
+original reference/import path, not these explicit update actions.
+
+Navigation calculations are computed locally, with no background download or
+Replit service. Native basemap layers and optional source downloads are
+separate from the imported-pack contract. The separate community reference makes
 device-direct GitHub requests only on its explicit update action; this navigation
 import flow and bundled openAIP reference make no server requests. On native devices the
 document picker reads a local JSON file and removes its temporary cache copy

@@ -1,14 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { parseNavigationPack, type NavigationPack } from '../data/navigation-pack';
 import referenceJson from '../data/australia-reference.json';
 import { OPENAIP_AU_PACK } from '../data/openaip-pack';
 import type { QueryContext } from '../lib/navigation';
 import { MAX_NAVIGATION_BYTES } from '../lib/navigation-storage';
+import { useOpenAip } from './OpenAipContext';
+import { OPENAIP_PACK_ID, openAipNavigationPack } from '../lib/openaip-data';
 
 const REFERENCE = parseNavigationPack(referenceJson);
 const BUILTIN_PACKS = [REFERENCE, OPENAIP_AU_PACK];
-const BUILTIN_PACK_IDS = new Set(BUILTIN_PACKS.map(pack => pack.id));
+const BUILTIN_PACK_IDS = new Set([...BUILTIN_PACKS.map(pack => pack.id), OPENAIP_PACK_ID]);
 const MAP_PACKS = (packs: NavigationPack[]) => packs.filter(pack => pack.land.length > 0 || pack.places.length > 0);
 const KEY = 'anc-uav.navigation.v1';
 type Value = {
@@ -25,6 +27,8 @@ type Value = {
 const Context = createContext<Value | null>(null);
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
+  const { snapshot: openAipSnapshot } = useOpenAip();
+  const downloadedOpenAip = useMemo(() => openAipSnapshot ? openAipNavigationPack(openAipSnapshot) : null, [openAipSnapshot]);
   const [saved, setSaved] = useState<{ packs: NavigationPack[]; activeId: string }>({ packs: [], activeId: REFERENCE.id });
   const current = useRef(saved);
   const [ready, setReady] = useState(false);
@@ -49,7 +53,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       const packs = input.packs.map((p: unknown) => parseNavigationPack(p));
       if (packs.some((p: NavigationPack) => BUILTIN_PACK_IDS.has(p.id)) || new Set(packs.map((p: NavigationPack) => p.id)).size !== packs.length)
         throw new Error('Conflicting pack identifiers');
-      if (input.activeId !== REFERENCE.id && !MAP_PACKS(packs).some((p: NavigationPack) => p.id === input.activeId))
+      if (input.activeId !== REFERENCE.id && input.activeId !== OPENAIP_PACK_ID && !MAP_PACKS(packs).some((p: NavigationPack) => p.id === input.activeId))
         throw new Error('Selected navigation pack is missing');
       const next = { packs, activeId: input.activeId };
       if (mounted) { current.current = next; setSaved(next); }
@@ -77,7 +81,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       throw e;
     } finally { locked.current = false; setBusy(false); }
   }
-  const packs = [...BUILTIN_PACKS, ...saved.packs];
+  // A downloaded AU snapshot supersedes the older bundled OpenAIP frequency
+  // reference in lookups, rather than showing conflicting generations together.
+  const packs = [...(downloadedOpenAip ? [REFERENCE, downloadedOpenAip] : BUILTIN_PACKS), ...saved.packs];
   const active = packs.find(p => p.id === saved.activeId) ?? REFERENCE;
   return <Context.Provider value={{
     packs, active, ready, error, busy, query: { ...query, utc: liveTime ? clock : query.utc }, setQuery, liveTime, setLiveTime, altitudeInput, setAltitudeInput,

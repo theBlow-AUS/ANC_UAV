@@ -7,6 +7,8 @@ import type { MapBounds, NavigationPack } from '../data/navigation-pack';
 import type { Coordinate } from '../lib/geo';
 import { mapStyle, type TileBounds, type TileLayerId } from '../lib/map-tiles';
 import { useColors } from '../hooks/useColors';
+import { useOpenAip } from '../context/OpenAipContext';
+import { OPENAIP_PACK_ID, recordGeometry } from '../lib/openaip-data';
 
 type Props = {
   pack: NavigationPack; origin: Coordinate | null; destination: Coordinate | null;
@@ -23,6 +25,7 @@ function MapLibreMap({ pack, origin, destination, onSelect, layer = 'openfreemap
   const { Camera, GeoJSONSource, Layer, Map: NativeMap } =
     require('@maplibre/maplibre-react-native') as typeof import('@maplibre/maplibre-react-native');
   const colors = useColors();
+  const { snapshot, visible } = useOpenAip();
   const cameraRef = useRef<CameraRef>(null);
   const bounds = focusBounds ?? pack.bounds;
   const style = useMemo(() => mapStyle(layer, satelliteDate) as unknown as StyleSpecification, [layer, satelliteDate]);
@@ -37,18 +40,27 @@ function MapLibreMap({ pack, origin, destination, onSelect, layer = 'openfreemap
     for (const ring of pack.land) {
       if (ring.length >= 3) {
         const closed = [...ring, ring[0]].map(p => [p.longitude, p.latitude] as [number, number]);
-        features.push({ type: 'Feature', properties: { kind: 'airspace' }, geometry: { type: 'Polygon', coordinates: [closed] } });
+        features.push({ type: 'Feature', properties: { kind: 'reference-land' }, geometry: { type: 'Polygon', coordinates: [closed] } });
       }
     }
-    for (const p of pack.places) features.push({
+    for (const p of pack.places.filter(() => visible || pack.id !== OPENAIP_PACK_ID)) features.push({
       type: 'Feature', properties: { kind: p.kind, label: p.name },
       geometry: { type: 'Point', coordinates: [p.position.longitude, p.position.latitude] },
     });
+    if (snapshot && visible) {
+      for (const a of snapshot.airspaces) features.push({
+        type: 'Feature', properties: { kind: 'airspace', id: a.id, label: a.name }, geometry: recordGeometry(a),
+      });
+      for (const a of snapshot.airports) {
+        if (pack.places.some(p => p.id === `openaip-${a.id}`)) continue;
+        features.push({ type: 'Feature', properties: { kind: 'aerodrome-unknown', id: a.id, label: a.icao ?? a.name }, geometry: recordGeometry(a) });
+      }
+    }
     if (origin) features.push({ type: 'Feature', properties: { kind: 'origin', label: 'A' }, geometry: { type: 'Point', coordinates: [origin.longitude, origin.latitude] } });
     if (destination) features.push({ type: 'Feature', properties: { kind: 'destination', label: 'B' }, geometry: { type: 'Point', coordinates: [destination.longitude, destination.latitude] } });
     if (origin && destination) features.push({ type: 'Feature', properties: { kind: 'measure-line' }, geometry: { type: 'LineString', coordinates: [[origin.longitude, origin.latitude], [destination.longitude, destination.latitude]] } });
     return { type: 'FeatureCollection' as const, features };
-  }, [pack, origin, destination]);
+  }, [pack, origin, destination, snapshot, visible]);
   const cameraBounds: MapBounds = { west: bounds.west, south: bounds.south, east: bounds.east, north: bounds.north };
 
   return <View style={{ gap: 8 }}>
@@ -63,6 +75,8 @@ function MapLibreMap({ pack, origin, destination, onSelect, layer = 'openfreemap
           initialViewState={{ bounds: [cameraBounds.west, cameraBounds.south, cameraBounds.east, cameraBounds.north] }}
           minZoom={0} maxZoom={layer === 'satellite' ? 9 : 17} />
         <GeoJSONSource id="anc-operational-reference" data={shape}>
+          <Layer id="anc-reference-land" type="fill" filter={['==', ['get', 'kind'], 'reference-land']}
+            paint={{ 'fill-color': colors.secondary, 'fill-opacity': 0.25 }} />
           <Layer id="anc-airspace-fill" type="fill" filter={['==', ['get', 'kind'], 'airspace']}
             paint={{ 'fill-color': colors.signal, 'fill-opacity': 0.12 }} />
           <Layer id="anc-airspace-outline" type="line" filter={['==', ['get', 'kind'], 'airspace']}
@@ -83,5 +97,8 @@ function MapLibreMap({ pack, origin, destination, onSelect, layer = 'openfreemap
       </NativeMap>
     </View>
     <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Tap map to select WGS84 points. Tiles are reference imagery only; they are not an aeronautical chart or flight clearance.</Text>
+    {snapshot && visible ? <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+      OpenAIP contributors · 2D reference overlays only; altitude, activation and NOTAM conditions are not applied to drawing. Tap for nearby airport and containing-polygon source details below. No primary navigation or flight planning.
+    </Text> : null}
   </View>;
 }

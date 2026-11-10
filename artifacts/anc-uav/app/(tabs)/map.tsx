@@ -15,10 +15,13 @@ import { OfflineTileManager } from '@/components/OfflineTileManager';
 import type { Coordinate } from '@/lib/geo';
 import { insideBounds } from '@/lib/navigation';
 import type { TileBounds, TileLayerId } from '@/lib/map-tiles';
+import { useOpenAip } from '@/context/OpenAipContext';
+import { OpenAipManager } from '@/components/OpenAipManager';
 
 export default function MapMeasureScreen() {
   const colors = useColors();
   const { active, query, setQuery } = useNavigation();
+  const openAip = useOpenAip();
   const [tapTarget, setTapTarget] = useState<'origin' | 'destination'>('origin');
   const [permission, requestPermission] = Location.useForegroundPermissions();
   const [gps, setGps] = useState<{ latitude: number; longitude: number; accuracy: number | null; capturedAt: string } | null>(null);
@@ -112,7 +115,7 @@ export default function MapMeasureScreen() {
       subtitle="Local maps · GPS · tap-to-measure"
     >
         <Callout title="Reference map — not an aviation chart">
-        OpenStreetMap, topographic and satellite layers contact their named public map hosts directly when online; downloads are saved locally. No map requests go through Replit. Preset region boundaries are approximate rectangles. The bundled airspace/frequency reference is separate, partial and not for primary navigation or flight planning. Missing data never means clear.
+        OpenStreetMap, topographic and satellite layers contact their named public map hosts directly when online; downloads are saved locally. No map requests go through Replit. Preset region boundaries are approximate rectangles. OpenAIP airspace/frequency references are separate, partial and not for primary navigation or flight planning. Missing data never means clear.
       </Callout>
 
       <Panel>
@@ -126,6 +129,7 @@ export default function MapMeasureScreen() {
         <OfflineMap key={`${active.id}-${active.provenance.retrievedAt}`} pack={active} origin={origin} destination={destination}
           layer={mapLayer} satelliteDate={satelliteDate} onBoundsChange={setVisibleBounds} focusBounds={focusBounds}
           onSelect={p => {
+             if (openAip.visible) openAip.inspect(p);
             if (tapTarget === 'origin') { chooseOrigin(p); setTapTarget('destination'); }
             else chooseDestination(p);
           }} />
@@ -141,6 +145,8 @@ export default function MapMeasureScreen() {
         onFocusBounds={setFocusBounds}
       />
       </Accordion>
+
+      <OpenAipManager />
 
       <SectionHeading title="Measurement origin" detail="Use device GPS or tap the map for point A." />
       <Panel>

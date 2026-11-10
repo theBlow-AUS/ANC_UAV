@@ -7,6 +7,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppDataProvider } from '../context/AppDataContext';
 import { NavigationProvider } from '../context/NavigationContext';
+import { OpenAipProvider } from '../context/OpenAipContext';
 
 export const unstable_settings = { anchor: '(tabs)' };
 
@@ -39,9 +40,11 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <KeyboardProvider>
             <AppDataProvider>
-              <NavigationProvider>
-                <RootLayoutNav />
-              </NavigationProvider>
+              <OpenAipProvider>
+                <NavigationProvider>
+                  <RootLayoutNav />
+                </NavigationProvider>
+              </OpenAipProvider>
             </AppDataProvider>
           </KeyboardProvider>
         </GestureHandlerRootView>

@@ -6,6 +6,7 @@ import { useColors } from '../hooks/useColors';
 import { pickNavigationPack } from '../lib/navigation-storage';
 import { sourceStatus } from '../lib/navigation';
 import { ActionButton, Badge, Callout, Panel, SectionHeading } from './FieldKit';
+import { OPENAIP_PACK_ID } from '../lib/openaip-data';
 
 export function SourceDetails({ source, utc }: { source: Provenance; utc: string }) {
   const colors = useColors();
@@ -29,7 +30,7 @@ export function NavigationPacks() {
     try { await action(); } catch (e) { setMessage(e instanceof Error ? e.message : 'Device storage operation failed.'); }
   }
   return <>
-    <SectionHeading title="On-device navigation packs" detail="JSON imports only. No map server, subscription, or automatic provider download." />
+    <SectionHeading title="On-device navigation packs" detail="Local JSON imports and installed reference sources. Optional OpenAIP downloads are managed separately on Map." />
     {error || message ? <Callout title="Navigation storage notice">{message || error}</Callout> : null}
     {canReset ? <Panel>
       <Text style={{ color: colors.destructive, fontSize: 13 }}>
@@ -60,7 +61,7 @@ export function NavigationPacks() {
           setPicking(true);
           void perform(async () => setPending(await pickNavigationPack())).finally(() => setPicking(false));
         }} />
-      {active.id !== 'natural-earth-au' && active.id !== 'openaip-au-area-frequency' ? <ActionButton label="Remove selected pack" icon="trash-2" secondary disabled={busy || !!pending}
+      {active.id !== 'natural-earth-au' && active.id !== 'openaip-au-area-frequency' && active.id !== OPENAIP_PACK_ID ? <ActionButton label="Remove selected pack" icon="trash-2" secondary disabled={busy || !!pending}
         onPress={() => Alert.alert('Remove navigation pack?', 'Only this device’s copy is removed. Keep your original pack file if you need to reinstall it.', [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Remove', style: 'destructive', onPress: () => void perform(() => remove(active.id)) },

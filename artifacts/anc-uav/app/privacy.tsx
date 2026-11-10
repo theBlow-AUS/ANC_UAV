@@ -22,8 +22,16 @@ export default function PrivacyScreen() {
       body: 'A public-domain OurAirports Australian aerodrome/frequency snapshot is bundled for offline reference. Only the explicit update action in Comms requests a commit ID from api.github.com and two public CSV files from raw.githubusercontent.com. No requests occur on launch. No coordinates, search terms, credentials or incident notes are sent; the hosts can see ordinary connection details such as your IP address. Failed updates retain the prior snapshot. Community records have unknown effective dates and do not establish airspace applicability.',
     },
     {
+      title: 'Optional OpenAIP reference downloads',
+      body: 'On native devices, explicit Check versions or Download AU data actions request a public Australian export listing and airport/airspace JSON files directly from storage.openaip.net. No account or key is needed. The host receives normal connection details such as IP address, not your GPS, entered coordinates, searches or incident notes. There are no launch/background checks or Replit relays. Validated snapshots and a previous backup are ordinary local files and may enter OS backups; Remove downloaded data deletes these and the separate API detail cache, not imported packs or the personal key. Source-effective dates and completeness remain unknown.',
+    },
+    {
+      title: 'Optional personal OpenAIP key',
+      body: 'A separate OpenAIP-only key can be entered in a native build with enrolled device authentication. It uses protected device storage (iOS Keychain / Android Keystore-backed SecureStore), is masked and not included in downloaded packs, app bundles or ordinary preferences. Saving it makes no request. Explicit Fetch/Refresh API detail unlocks it and sends it in an HTTPS header only to api.core.openaip.net, with the selected source record ID; no GPS or search terms are sent. Up to 25 details are cached separately as ordinary local files, not credentials. Removing the key leaves cached public data/details; removing downloaded data leaves the key. No developer-accessible credential backend exists, but at-rest protection is not a guarantee against a compromised device, its OS or the API provider. Keychain entries can survive reinstall. Browser/Expo Go do not offer a weaker credential-storage fallback.',
+    },
+    {
       title: 'Credentials',
-      body: 'Provider Access and its credential tools are turned off. Any entries previously saved in iOS Keychain or Android Keystore remain there; this app does not access or delete them. No provider connection is active.',
+      body: 'General Provider Access and its credential tools are turned off. Any old Airservices/NAIPS entries saved in iOS Keychain or Android Keystore remain there; this app does not access or delete them. Optional OpenAIP-only keys are separate and do not enable those providers.',
     },
     {
       title: 'Imported files and notes',
@@ -35,11 +43,11 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Pasted MET briefings',
-      body: 'The Navigate reading aid processes supplied briefing text entirely in temporary app memory using a local TAF decoder. It does not upload or save briefings, including any names in them. Clear text removes the draft and reading. It does not retrieve a current briefing, verify currency or interpret every code.',
+      body: 'The Tools reading aid processes supplied briefing text entirely in temporary app memory using a local TAF decoder. It does not upload or save briefings, including any names in them. Clear text removes the draft and reading. It does not retrieve a current briefing, verify currency or interpret every code.',
     },
     {
       title: 'Pasted NOTAM text',
-      body: 'The Comms reading aid interprets text locally on the device. Text is held only in temporary app memory; use Clear text to remove the draft and explanation. It is not saved, uploaded, sent to an AI/model, or sent to a provider. The tool does not fetch or verify NOTAMs.',
+      body: 'The Tools reading aid interprets text locally on the device. Text is held only in temporary app memory; use Clear text to remove the draft and explanation. It is not saved, uploaded, sent to an AI/model, or sent to a provider. The tool does not fetch or verify NOTAMs.',
     },
     {
       title: 'Operating profiles',
@@ -47,7 +55,7 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Provider accounts and permissions',
-      body: 'Provider Access is turned off. No provider sign-in, credential access, or provider downloads are available in this app. Any old secure-vault entries remain on the device and are not accessed or deleted. CASA/myID and AVCRM are not connected.',
+      body: 'General Provider Access is turned off. Airservices/NAIPS sign-in, credential access and provider downloads remain unavailable. Existing secure-vault entries are not accessed or deleted. OpenAIP public exports and optional personal API keys are a separate, narrowly scoped reference feature. CASA/myID and AVCRM are not connected.',
     },
     {
       title: 'Reference snapshots',

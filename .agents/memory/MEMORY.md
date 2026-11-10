@@ -2,3 +2,4 @@
 - [Offline navigation rights](offline-navigation-rights.md) — reference geography is not operational aviation data; provider access and import assertions are not redistribution approval.
 - [Provider Access disabled](provider-access-off.md) — keep provider connection, download, credential and vault-management UI off; preserve existing device vault data.
 - [MET reading boundaries](met-reading-boundaries.md) — observation trends must not inherit Australian TAF timing conventions or become observed GPS weather.
+- [Expo verification caveats](expo-verification.md) — lazy preview loading and native-module mock interop can resemble app failures; preserve credential protection.
