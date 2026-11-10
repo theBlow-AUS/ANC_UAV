@@ -54,3 +54,14 @@ under the required licence, and never present it as certified/current. Never
 invent service radii, infer controlled status from airport type or treat
 retrieval time as an effective date. Review each additional source's actual
 intended-use terms independently.
+
+OpenAIP should use public offline downloads by default, with the option for each
+user to enter their own API key for authenticated access on their device.
+
+**Why:** The user explicitly chose public offline downloads plus optional
+individual keys, rather than requiring everyone to use one shared app key.
+
+**How to apply:** Do not bundle a project/developer key in the app, even encrypted.
+Keep personal keys in device-protected storage, separate from downloaded data,
+and do not promise that a key provides extra data or account features unless
+the documented API actually supplies them.
