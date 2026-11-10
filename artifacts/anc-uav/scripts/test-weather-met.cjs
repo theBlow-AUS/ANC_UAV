@@ -7,6 +7,7 @@ require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileMo
 }).outputText, filename);
 const { explainMetBriefing } = require('../lib/met-briefing.ts');
 const W = require('../lib/uav-weather.ts');
+const observations = require('./fixtures/met-observations.json');
 
 // Synthetic, de-identified adaptation of the supplied structure.
 const sample = `GENERAL MET MESSAGE BRIEFING
@@ -66,14 +67,97 @@ test('invalid or unsupported briefings do not produce an authoritative forecast'
   assert.throws(() => explainMetBriefing(sample + '\n' + sample), /one TAF at a time/);
   assert.throws(() => explainMetBriefing('x'.repeat(30001)), /30,000/);
   assert.ok(explainMetBriefing('TAF YSSY 999999Z 9999/9999 999999KT').blocks.some(b => b.lines.includes('Issue time not interpreted.')));
-  assert.ok(explainMetBriefing('METAR YSSY 100400Z 06018KT').warnings.some(w => /No supported TAF header/.test(w)));
+  assert.ok(explainMetBriefing('METAR YZZZ 100400Z 06018KT').blocks.some(b => /observation/.test(b.title)));
+});
+test('METAR keeps station, observation time, AUTO, gust units and original text', () => {
+  const result = explainMetBriefing(observations.routine);
+  assert.equal(result.original, observations.routine);
+  assert.equal(result.blocks.length, 1);
+  const block = result.blocks[0];
+  assert.equal(block.title, 'METAR · YZZZ · observation');
+  assert.equal(block.source, observations.routine.slice(0, -1));
+  assert.match(block.lines.join(' '), /Routine observation.*YZZZ.*day 10, 04:00 UTC.*100400Z.*not a forecast/);
+  assert.match(block.lines.join(' '), /AUTO: automated.*60° true.*18 kt.*28 kt.*30° and 90° true/);
+  assert.match(block.lines.join(' '), /10 km or more.*Light rain showers.*3000 ft above the aerodrome.*cumulonimbus.*23 °C.*17 °C.*1018 hPa/);
+  assert.equal(block.unknown.length, 0);
+  assert.match(result.warnings.join(' '), /not a forecast.*GPS position.*do not provide a low-altitude wind profile.*No operational clearance/);
+});
+test('SPECI preserves COR, negative temperatures, source pressure units and unknown groups', () => {
+  const result = explainMetBriefing(observations.special);
+  const block = result.blocks[0];
+  assert.equal(block.title, 'SPECI · YZZY · observation');
+  assert.match(block.lines.join(' '), /Special observation.*day 31, 23:59 UTC.*COR: corrected.*Calm.*0 m\/s.*800 m.*vertical visibility not available.*−02 °C.*−05 °C.*29.92 inHg/);
+  assert.deepEqual(block.unknown, ['R09/0600U', 'REBLSN', 'XYZ']);
+  assert.ok(result.warnings.some(w => /uninterpreted/.test(w)));
+  const remarks = result.blocks.find(b => b.title.includes('remarks'));
+  assert.equal(remarks.source, 'RMK 1018 RF00.0/000.0');
+  assert.deepEqual(remarks.unknown, ['RMK', '1018', 'RF00.0/000.0']);
+  assert.doesNotMatch(remarks.lines.join(' '), /1018 m|1018 hPa/);
+});
+test('observation trends never become observed conditions or TAF change groups', () => {
+  const result = explainMetBriefing(observations.trend);
+  assert.match(result.blocks[0].lines.join(' '), /COR: corrected.*variable direction.*3 m\/s.*CAVOK/);
+  assert.doesNotMatch(result.blocks[0].lines.join(' '), /400 m|Fog|200 ft/);
+  const trend = result.blocks[1];
+  assert.match(trend.title, /trend forecast \(not observed\)/);
+  assert.equal(trend.source, 'TEMPO FM0030 TL0130 0400 FG BKN002');
+  assert.deepEqual(trend.unknown, ['TEMPO', 'FM0030', 'TL0130', '0400', 'FG', 'BKN002']);
+  assert.ok(!result.blocks.some(b => b.title === 'TEMPO'));
+  assert.equal(result.blocks[2].source, 'RMK TEST ONLY');
+  const nosig = explainMetBriefing(observations.nosig);
+  assert.match(nosig.blocks[1].lines.join(' '), /no significant change forecast.*not a guarantee/);
+});
+test('NIL and missing groups never supply weather or infer missing values', () => {
+  const nil = explainMetBriefing(observations.nil);
+  assert.match(nil.blocks[0].lines.join(' '), /NIL: observation unavailable/);
+  assert.doesNotMatch(nil.blocks[0].lines.join(' '), /Calm|visibility:|QNH:/);
+  const missing = explainMetBriefing(observations.missing).blocks[0];
+  assert.deepEqual(missing.unknown, ['////', 'BKN///', 'Q////']);
+  assert.match(missing.lines.join(' '), /Air temperature: not reported; dew point: not reported/);
+  assert.match(missing.lines.join(' '), /15 km\/h/);
+  assert.doesNotMatch(missing.lines.join(' '), /0 ft|0 hPa|0 °C/);
+  assert.match(explainMetBriefing('METAR YZZZ 100400Z').blocks[0].lines.join(' '), /No observation condition groups/);
+});
+test('multiple observations and a TAF stay separate with same-line, multiline and absent terminators', () => {
+  for (const separator of [' ', '\n', '\r\n']) {
+    const text = `TAF YZZZ 100300Z 1003/1103 03010KT CAVOK=${separator}${observations.routine}${separator}${observations.special}`;
+    const result = explainMetBriefing(text);
+    assert.equal(result.original, text);
+    const base = result.blocks.find(b => b.title === 'Initial prevailing conditions');
+    assert.equal(base.source, '03010KT CAVOK');
+    assert.ok(!base.unknown.length);
+    assert.equal(result.blocks.filter(b => /· observation$/.test(b.title)).length, 2);
+    assert.doesNotMatch(base.lines.join(' '), /28 kt|29.92/);
+  }
+  const result = explainMetBriefing(observations.routine.replace('=', '') + '\n' + observations.special.replace('=', ''));
+  assert.equal(result.blocks.filter(b => /· observation$/.test(b.title)).length, 2);
+});
+test('bad observation times and headers retain all text without partial decoding', () => {
+  for (const text of [
+    'METAR YZZZ 000400Z 06018KT', 'SPECI YZZZ 102400Z 06018KT',
+    'METAR YZZZ 100460Z 06018KT', 'METAR YZZZ 999999Z 06018KT',
+    'SPECI YZZZ 06018KT', 'METAR BAD 100400Z 06018KT',
+  ]) {
+    const result = explainMetBriefing(text);
+    assert.equal(result.original, text);
+    assert.equal(result.blocks[0].title, 'Observation not interpreted');
+    assert.deepEqual(result.blocks[0].unknown, [text]);
+    assert.doesNotMatch(result.blocks[0].lines.join(' '), /18 kt/);
+  }
+  assert.match(explainMetBriefing('METAR YZZZ 100400Z 99910KT NSW FOO').blocks[0].unknown.join(' '), /99910KT NSW FOO/);
 });
 test('MET reader never uses a remote request', () => {
   const before = global.fetch;
   global.fetch = () => { throw new Error('Unexpected network'); };
-  try { assert.ok(explainMetBriefing(sample).blocks.length); } finally { global.fetch = before; }
+  try {
+    for (const text of [sample, ...Object.values(observations)]) assert.ok(explainMetBriefing(text));
+  } finally { global.fetch = before; }
   const ui = fs.readFileSync(require.resolve('../components/MetBriefingExplainer.tsx'), 'utf8');
   assert.doesNotMatch(ui, /\bfetch\(|AsyncStorage|api-client|analytics/);
+  for (const file of ['met-briefing.ts', 'met-observations.ts']) {
+    assert.doesNotMatch(fs.readFileSync(require.resolve(`../lib/${file}`), 'utf8'), /\bfetch\(|https?:|AsyncStorage|api-client|analytics/);
+  }
+  assert.match(ui, /METAR, SPECI, TAF/);
 });
 
 function cache() {

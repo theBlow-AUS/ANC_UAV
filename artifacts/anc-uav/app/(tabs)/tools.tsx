@@ -13,7 +13,7 @@ export default function ToolsScreen() {
     <Accordion title="NOTAM · plain English" summary="One notice at a time · limited local interpretation" icon="file-text" testID="tools-notam">
       <NotamExplainer embedded />
     </Accordion>
-    <Accordion title="MET briefing · plain English" summary="TAF and supplied briefing format · source scopes kept separate" icon="cloud" testID="tools-met">
+    <Accordion title="MET briefing · plain English" summary="METAR/SPECI observations, TAF and briefings · separate source scopes" icon="cloud" testID="tools-met">
       <MetBriefingExplainer embedded />
     </Accordion>
     <Accordion title="Distance converter" summary="Kilometres ↔ nautical miles" icon="repeat" testID="tools-distance">

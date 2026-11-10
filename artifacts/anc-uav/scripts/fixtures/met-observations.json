@@ -1,0 +1,9 @@
+{
+  "note": "Synthetic, de-identified parser fixtures. YZZZ and YZZY are test identifiers, not verified stations or operational weather.",
+  "routine": "METAR YZZZ 100400Z AUTO 06018G28KT 030V090 9999 -SHRA SCT030 BKN090CB 23/17 Q1018=",
+  "special": "SPECI COR YZZY 312359Z 00000MPS 0800 FG VV/// M02/M05 A2992 R09/0600U REBLSN XYZ RMK 1018 RF00.0/000.0=",
+  "trend": "METAR YZZZ 010000Z COR VRB03MPS CAVOK 20/12 Q1009 TEMPO FM0030 TL0130 0400 FG BKN002 RMK TEST ONLY=",
+  "nil": "METAR YZZZ 100400Z NIL=",
+  "missing": "SPECI YZZZ 100430Z 27015KMH //// BKN/// ///// Q////=",
+  "nosig": "METAR YZZZ 100500Z 36010KT 9999 NSC 19/11 Q1016 NOSIG="
+}

@@ -11,14 +11,14 @@ export function MetBriefingExplainer({ embedded = false }: { embedded?: boolean 
   const [error, setError] = useState('');
   function change(text: string) { setDraft(text); setReading(null); setError(''); }
   return <View>
-    {!embedded ? <SectionHeading title="MET briefing · plain English" detail="Local reader for a TAF or the supplied Australian briefing format" /> : null}
+    {!embedded ? <SectionHeading title="MET briefing · plain English" detail="Local reader for METAR/SPECI observations, TAFs and Australian briefings" /> : null}
     <Callout title="Reading aid, not a weather briefing">
-      No upload, AI service, or provider lookup. It cannot confirm the latest forecast or whether conditions are suitable for flight. Unsupported codes stay visible; source times stay in UTC.
+      No upload, AI service, or provider lookup. Observations are station reports, not forecasts or weather at your GPS position. No low-altitude wind profile or flight clearance is inferred. Currency is not verified. Unsupported codes stay visible; source times stay in UTC.
     </Callout>
     <TextField label="MET briefing text" value={draft} onChangeText={change} multiline maxLength={30000}
       autoCorrect={false} autoCapitalize="characters" textAlignVertical="top"
       style={{ minHeight: 160, paddingTop: 12, fontSize: 15, fontWeight: '500', lineHeight: 21 }}
-      placeholder="Paste the briefing and TAF here" testID="met-input"
+      placeholder="Paste METAR, SPECI, TAF or briefing text here" testID="met-input"
       hint="Temporary app memory only; not saved. Clear text removes the draft and reading." />
     <ActionButton label="Explain on device" icon="book-open" disabled={!draft.trim()} testID="met-explain" onPress={() => {
       try { setReading(explainMetBriefing(draft)); setError(''); }
@@ -37,7 +37,7 @@ export function MetBriefingExplainer({ embedded = false }: { embedded?: boolean 
         <Text selectable style={{ color: c.mutedForeground, fontSize: 13, lineHeight: 19 }}>Source: {block.source || '(empty)'}</Text>
       </Panel>)}
       <Panel><SectionHeading title="Original briefing" /><Text selectable style={{ color: c.foreground, fontSize: 13, lineHeight: 19 }}>{reading.original}</Text></Panel>
-      <Text style={{ color: c.mutedForeground, fontSize: 12, marginBottom: 12 }}>TAF conventions based on Bureau of Meteorology education guidance (CC BY 4.0). Limited subset; no endorsement.</Text>
+      <Text style={{ color: c.mutedForeground, fontSize: 12, marginBottom: 12 }}>Limited observation and TAF subsets; trends and remarks remain separate. TAF conventions based on Bureau of Meteorology education guidance (CC BY 4.0). No endorsement.</Text>
       <ActionButton secondary label="TAF decoding reference" icon="external-link" onPress={() => {
         void Linking.openURL('https://reg.bom.gov.au/aviation/data/education/taf.pdf').catch(() => setError('Could not open the reference in your browser.'));
       }} />

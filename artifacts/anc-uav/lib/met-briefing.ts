@@ -1,3 +1,5 @@
+import { observationBlocks } from './met-observations';
+
 export type MetBlock = { title: string; source: string; lines: string[]; unknown: string[] };
 export type MetReading = { original: string; blocks: MetBlock[]; warnings: string[] };
 
@@ -14,7 +16,7 @@ const cloudAmounts: Record<string, string> = {
   FEW: 'Few (1–2 oktas)', SCT: 'Scattered (3–4 oktas)', BKN: 'Broken (5–7 oktas)', OVC: 'Overcast (8 oktas)',
 };
 
-function dayTime(value: string, minutes = false): string | null {
+export function dayTime(value: string, minutes = false): string | null {
   if (!new RegExp(minutes ? '^\\d{6}$' : '^\\d{4}$').test(value)) return null;
   const day = Number(value.slice(0, 2)), hour = Number(value.slice(2, 4));
   const minute = minutes ? Number(value.slice(4, 6)) : 0;
@@ -29,7 +31,7 @@ function interval(value: string): string | null {
   return from && to ? `${from} to ${to}` : null;
 }
 
-function decodeToken(token: string): string | null {
+export function decodeToken(token: string): string | null {
   const wind = token.match(/^(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?(KT|MPS|KMH)$/);
   if (wind) {
     if (wind[1] !== 'VRB' && Number(wind[1]) > 360) return null;
@@ -37,13 +39,13 @@ function decodeToken(token: string): string | null {
     const speed = Number(wind[2]), gust = wind[3] ? Number(wind[3]) : null;
     const unit = wind[4] === 'KT' ? 'kt' : wind[4] === 'MPS' ? 'm/s' : 'km/h';
     const calm = wind[1] === '000' && speed === 0 && gust === null;
-    return calm ? 'Calm wind reported in this group.' :
+    return calm ? `Calm wind reported in this group (${speed} ${unit}).` :
       `Wind from ${wind[1] === 'VRB' ? 'a variable direction' : `${Number(wind[1])}° true`} at ${speed} ${unit} (${(speed * factor).toFixed(1)} m/s)` +
       (gust === null ? '.' : `, gusting ${gust} ${unit} (${(gust * factor).toFixed(1)} m/s).`);
   }
   if (token === '9999') return 'Horizontal visibility: 10 km or more.';
   if (/^\d{4}$/.test(token)) return token === '0000' ? 'Visibility: less than 50 m.' : `Horizontal visibility: ${Number(token)} m.`;
-  if (token === 'CAVOK') return 'CAVOK: visibility at least 10 km; no cloud below 5,000 ft or the highest 25 NM minimum sector altitude (whichever is higher), no cumulonimbus, and no significant weather under CAVOK criteria. It does not mean clear sky or safe UAV conditions.';
+  if (token === 'CAVOK') return 'CAVOK: visibility at least 10 km; no cloud below 5,000 ft or the highest 25 NM minimum sector altitude (whichever is higher), no cumulonimbus or towering cumulus, and no significant weather under CAVOK criteria. It does not mean clear sky or safe UAV conditions.';
   if (weather[token]) return `${weather[token]}.`;
   const cloud = token.match(/^(FEW|SCT|BKN|OVC)(\d{3})(CB|TCU)?$/);
   if (cloud) return `${cloudAmounts[cloud[1]]} cloud, base ${Number(cloud[2]) * 100} ft above the aerodrome${cloud[3] === 'CB' ? '; cumulonimbus (thunderstorm cloud)' : cloud[3] === 'TCU' ? '; towering cumulus' : ''}. This is not height above your current ground position.`;
@@ -85,14 +87,20 @@ function conditionBlock(source: string, base: boolean): MetBlock {
 
 /** Local reading aid; never fetches a briefing or determines operational applicability. */
 export function explainMetBriefing(input: string): MetReading {
-  if (!input.trim()) throw new Error('Paste a MET briefing or TAF first.');
+  if (!input.trim()) throw new Error('Paste a MET briefing, TAF, METAR or SPECI first.');
   if (input.length > 30_000) throw new Error('Use one briefing of at most 30,000 characters.');
   const allLines = input.replace(/\r\n?/g, '\n').split('\n').map(line => line.trim());
-  const starts = allLines.map((line, i) => /^TAF\s+(?:(?:AMD|COR)\s+)?[A-Z]{4}\b/.test(line) ? i : -1).filter(i => i >= 0);
-  if (starts.length > 1) throw new Error('Use one TAF at a time so its change groups cannot be mixed with another forecast.');
+  // Report boundaries also apply on one line and without an "=" terminator.
+  // Never let an observation become part of a TAF change group (or vice versa).
+  const starts = [...input.matchAll(/\b(?:TAF(?=\s+(?:(?:AMD|COR)\s+)?[A-Z]{4}\b)|METAR|SPECI)\b/g)];
+  const reports = starts.map((match, i) => input.slice(match.index!, starts[i + 1]?.index ?? input.length)
+    .split('=')[0].split(/\r?\n\s*\r?\n|\r?\n(?=[A-Z][A-Z /()-]+:\s*)/)[0].trim());
+  const tafs = reports.filter(report => report.startsWith('TAF'));
+  if (tafs.length > 1) throw new Error('Use one TAF at a time so its change groups cannot be mixed with another forecast.');
   const warnings = [
     'Reading aid only. This does not verify the latest issue, dates, applicability, or completeness. Check current official aviation weather.',
-    'TAF winds describe aerodrome surface forecasts, not a wind profile to 120 m at your location. Cloud bases are above aerodrome elevation.',
+    'Observations describe reported station conditions at the observation time, not a forecast or conditions at your GPS position. TAFs are forecasts, not observations.',
+    'Station surface winds do not provide a low-altitude wind profile to 120 m at your GPS position. Cloud bases are above aerodrome elevation. No operational clearance or flight suitability is determined.',
     'Day/time groups stay in UTC; month, year and local timezone are not inferred. Change and probability groups are kept separate; missing elements are not filled in.',
   ];
   const blocks: MetBlock[] = [];
@@ -100,10 +108,8 @@ export function explainMetBriefing(input: string): MetReading {
   if (/NOT AMENDED BETWEEN ROUTINE ISSUES/i.test(input)) warnings.push('The source says this briefing is not amended between routine issues.');
   const issueLine = allLines.find(line => /^ISSUED AT\b/i.test(line));
   if (issueLine) blocks.push({ title: 'Briefing issue statement (as supplied)', source: issueLine, lines: ['This wrapper issue statement is separate from the TAF issue time.'], unknown: [] });
-  if (starts.length) {
-    let end = starts[0] + 1;
-    while (end < allLines.length && allLines[end] && !/^[A-Z][A-Z /()-]+:\s*/.test(allLines[end])) end++;
-    const taf = allLines.slice(starts[0], end).join(' ').replace(/=$/, '').trim();
+  if (tafs.length) {
+    const taf = tafs[0].replace(/\s+/g, ' ');
     const header = taf.match(/^TAF\s+(?:(AMD|COR)\s+)?([A-Z]{4})\s+(\d{6})Z\s+(\d{4}\/\d{4})\s*(.*)$/);
     if (header) {
       blocks.push({
@@ -137,7 +143,10 @@ export function explainMetBriefing(input: string): MetReading {
         });
       }
     } else warnings.push('TAF header not supported or malformed; no forecast groups were interpreted.');
-  } else warnings.push('No supported TAF header found. Narrative and the complete original remain available.');
+  }
+  const observations = reports.filter(report => /^(METAR|SPECI)\b/.test(report));
+  for (const observation of observations) blocks.push(...observationBlocks(observation, dayTime, decodeToken));
+  if (!tafs.length && !observations.length) warnings.push('No supported TAF, METAR or SPECI header found. Narrative and the complete original remain available.');
 
   let narrative: MetBlock | null = null;
   for (const line of allLines) {
