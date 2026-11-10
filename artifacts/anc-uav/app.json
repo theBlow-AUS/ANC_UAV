@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "ANC UAV uses your location only when you ask it to measure from your current position.",
+        "NSLocationWhenInUseUsageDescription": "ANC UAV uses location when you request measurements, nearby references or local weather. Weather sends a rounded position directly to Open-Meteo with your consent.",
         "NSFaceIDUsageDescription": "ANC UAV uses device authentication to protect account entries in the local secure vault."
       }
     },
@@ -35,7 +35,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "ANC UAV uses your location only when you ask it to measure from your current position."
+          "locationWhenInUsePermission": "ANC UAV uses location when you request measurements, nearby references or local weather. Weather sends a rounded position directly to Open-Meteo with your consent."
         }
       ],
       "@maplibre/maplibre-react-native"

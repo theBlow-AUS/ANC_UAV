@@ -11,7 +11,7 @@ export default function PrivacyScreen() {
     },
     {
       title: 'Location',
-      body: 'Location permission is requested only after you ask to use device GPS. The returned coordinate is used locally for measurements and nearby frequency discovery; it is not written to the account vault or sent to a server.',
+      body: 'Location permission is requested only after you ask to use device GPS. Measurements and nearby frequency discovery use coordinates locally. The separate, opt-in weather action sends coordinates rounded to 0.001° directly to Open-Meteo; GPS accuracy and the unrounded fix are not sent. Coordinates are not written to the account vault.',
     },
     {
       title: 'Offline map downloads',
@@ -28,6 +28,14 @@ export default function PrivacyScreen() {
     {
       title: 'Imported files and notes',
       body: 'Imported documents and content packs stay in app storage. Text and operator-entered incident assignment notes are held in local app preferences. Use the Library removal control for imported files.',
+    },
+    {
+      title: 'Local UAV weather',
+      body: 'Open-Meteo forecast requests go directly from the device to api.open-meteo.com only after non-commercial-use and coordinate-sharing consent and a GPS-weather action. The provider sees the rounded location and normal network details such as IP address. A last successful forecast, rounded requested point and consent are saved in ordinary device preferences for offline reference and may enter OS backups. No automatic launch/background refresh or Replit relay is used. Clear saved weather removes this snapshot and consent. The free endpoint is not enabled for commercial use.',
+    },
+    {
+      title: 'Pasted MET briefings',
+      body: 'The Navigate reading aid processes supplied briefing text entirely in temporary app memory using a local TAF decoder. It does not upload or save briefings, including any names in them. Clear text removes the draft and reading. It does not retrieve a current briefing, verify currency or interpret every code.',
     },
     {
       title: 'Pasted NOTAM text',

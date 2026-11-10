@@ -8,6 +8,7 @@ import { useColors } from '@/hooks/useColors';
 import { useUi } from '@/hooks/useUi';
 import { aerodromeComparison, NM, tempComparison, windComparison, type AeroType } from '@/lib/airspace';
 import { setUi } from '@/lib/ui-store';
+import { MetBriefingExplainer } from '@/components/MetBriefingExplainer';
 
 const num = (s: string) => (s.trim() === '' || !Number.isFinite(Number(s)) ? null : Number(s));
 
@@ -72,6 +73,7 @@ export default function NavigateScreen() {
       <PriorityRail current="navigate" />
       <Grid cols={ui.wide ? 2 : 1} gap={20}>{[checks, reference]}</Grid>
       <Callout title="Not a clearance">Results compare your number to figures on the unverified mockup card. They never say an area is clear or that a call is required. Check charts, NOTAMs and approved procedures.</Callout>
+      <MetBriefingExplainer />
     </Screen>
   );
 }
