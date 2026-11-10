@@ -223,14 +223,6 @@ export default function LibraryScreen() {
         </Text>
       </Panel>
 
-      <SectionHeading title="Provider Access disabled" />
-      <Panel>
-        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>
-          Provider connections, downloads and credential tools are turned off. You can still import local reference snapshots when you have permission to store them.
-        </Text>
-        <ActionButton label="Reference snapshots & updates" icon="folder" secondary onPress={() => router.push('/references')} testID="library-reference-snapshots" />
-      </Panel>
-
       <SectionHeading title="Privacy & App Store information" />
       <Panel>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.mutedForeground }}>

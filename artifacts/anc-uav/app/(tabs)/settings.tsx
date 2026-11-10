@@ -64,7 +64,7 @@ export default function SettingsScreen() {
         <ActionButton secondary icon="check-square" label="Checklists" onPress={() => router.push('/checklists')} />
         <ActionButton secondary icon="shield" label="Privacy" onPress={() => router.push('/privacy')} />
       </Panel>
-      <Callout title="Data coverage">No verified aerodrome or airspace dataset is installed. Distances come from GPS or entered coordinates. Provider Access and its credential tools are turned off.</Callout>
+      <Callout title="Data coverage">No verified aerodrome or airspace dataset is installed. Distances come from GPS or entered coordinates.</Callout>
     </View>
   );
 

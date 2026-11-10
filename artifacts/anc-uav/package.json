@@ -9,6 +9,7 @@
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:navigation": "node scripts/test-navigation.cjs",
+    "test:provider-access": "node --test scripts/test-provider-access-off.cjs",
     "build:openaip": "node scripts/build-openaip-pack.cjs",
     "test:references": "node scripts/test-references.cjs",
     "test:aircraft": "node --test scripts/test-aircraft.cjs",
